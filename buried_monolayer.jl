@@ -1,8 +1,8 @@
-include("..\\updated\\constants.jl")
-# include("..\\updated\\co_co_interactions.jl")
-include("..\\updated\\site_surface_interaction.jl")
-include("..\\updated\\lattice_construction.jl")
-include("..\\updated\\co_co_Guo.jl")
+include("constants.jl")
+# include("co_co_interactions.jl")
+include("site_surface_interaction.jl")
+include("lattice_construction.jl")
+include("co_co_Guo.jl")
 
 using Optim
 using Printf

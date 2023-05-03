@@ -111,7 +111,7 @@ end
 initial_state::Vector{Float64} = [0.0,0.0,0.0,180.0,1.0] 
 
 
-@time res = simulated_annealing(initial_state, 300, 0.2)
+@time res = simulated_annealing(initial_state, 30, 0.2)
 
 display(plot(res[3])) # .- res[3][1]))
 println(res[1])

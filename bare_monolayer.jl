@@ -1,4 +1,4 @@
-include("../interactions.jl")
+#include("../interactions.jl")
 
 theta_m = fill(26.0,4)#[0.0,0.0,0.0,0.0]
 phi_m = [0.0,0.0,180.0,180.0]

@@ -4,7 +4,7 @@ using DelimitedFiles
 
 include("constants.jl")
 include("co_co_interactions.jl")
-include("../Plots_default.jl")
+include("Plots_default.jl")
 
 #%%
 ### Now my own interactions
