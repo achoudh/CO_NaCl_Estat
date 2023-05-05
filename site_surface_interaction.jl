@@ -11,62 +11,40 @@ function alpha_ro_exp(params::Vector{Float64}, costheta::Float64, r::Float64)::F
 end
 
 
-function rep_func(alpha, ro, r)
-    return exp(-alpha*(r-ro))
-end
+function mol_surf_rep_stone(op::Vector{Float64}, cp::Vector{Float64}, nei::Int64)
 
-function rel_pos_co(d, theta, phi)
-    return [d*sin(theta)*cos(phi), d*sin(theta)*sin(phi), d*cos(theta)]
-end
-
-function mol_surf_rep_stone(ml_in_o::Vector{Float64}, ml_in_c::Vector{Float64}, nei::Int64)
-    #costheta = cos(theta)
-    op::Vector{Float64} = ml_in_o #+ [v*sin(theta)*cos(phi), v*sin(theta)*sin(phi), v*costheta]
-    cp::Vector{Float64} = ml_in_c #+ [-w*sin(theta)*cos(phi), -w*sin(theta)*sin(phi), -w*costheta] 
+    mco::Vector{Vector{Float64}} = [cp, op]
     rco::Vector{Float64} =  op - cp
-    co::Float64 = norm(rco)
-    b1::Vector{Int64} = [0,1,0]
-    b2::Vector{Int64} = [1,0,0]
-    rep::Float64 = 0.0
-    disp::Float64 = 0.0
-    for i = -nei:nei
-        for j = -nei:nei
-            r1::Vector{Float64} = [0.0, 0.0, 0.0] + i*b1 + j*b2
-            r1_2::Vector{Float64} = [0.0, 0.0, -a0_NaCl/a0_surf] + i*b1 + j*b2
-            rcna::Vector{Float64} = a0_surf .* r1 - cp
-            rona::Vector{Float64} = a0_surf .* r1 - op
-            rccl_2::Vector{Float64} = a0_surf .* r1_2 - cp
-            rocl_2::Vector{Float64} = a0_surf .* r1_2 - op
-            
-            
-            r2::Vector{Float64} = [-0.5, -0.5, 0.0] + i*b1 + j*b2
-            r2_2::Vector{Float64} = [-0.5, -0.5, -a0_NaCl/a0_surf] + i*b1 + j*b2
-            rccl::Vector{Float64} = a0_surf .* r2 - cp
-            rocl::Vector{Float64} = a0_surf .* r2 - op
-            rcna_2::Vector{Float64} = a0_surf .* r2_2 - cp
-            rona_2::Vector{Float64} = a0_surf .* r2_2 - op
-            
-            cna::Float64, ona::Float64, cna_2::Float64, ona_2::Float64 = norm(rcna), norm(rona), norm(rcna_2), norm(rona_2)
-            cthetacna::Float64, cthetaona::Float64, cthetacna_2::Float64, cthetaona_2::Float64 = dot(rco, rcna)/(co*cna), dot(rco, rona)/(co*ona),
-                                                             dot(rco, rcna_2)/(co*cna_2), dot(rco, rona_2)/(co*ona_2)
+    dco::Float64 = norm(rco)
+    uco::Vector{Float64} = rco/dco
+    repulsion::Float64 = 0.0
+    dispersion::Float64 = 0.0
+    r_nei = zeros(Float64, 3)
+    Δr = zeros(Float64, 3)
+    dist ::Float64 = 0.0
+    cosθ ::Float64 = 0.0
+    #i :: Int16,j :: Int16,layer :: Int16,ion :: Int16,atom :: Int16 = 1,1,1,1,1
 
-            ccl::Float64, ocl::Float64, ccl_2::Float64, ocl_2::Float64 = norm(rccl), norm(rocl), norm(rccl_2), norm(rocl_2)
-            cthetaccl::Float64, cthetaocl::Float64, cthetaccl_2::Float64, cthetaocl_2::Float64 = dot(rco, rccl)/(co*ccl), dot(rco, rocl)/(co*ocl),
-                                                             dot(rco, rccl_2)/(co*ccl_2), dot(rco, rocl_2)/(co*ocl_2)
-            cna6::Float64, ona6::Float64, ccl6::Float64, ocl6::Float64 = [1/cna^6, 1/ona^6, 1/ccl^6, 1/ocl^6]
-            cna26::Float64, ona26::Float64, ccl26::Float64, ocl26::Float64 = [1/cna_2^6, 1/ona_2^6, 1/ccl_2^6, 1/ocl_2^6]                                                    
-            
-            rep += (alpha_ro_exp(o_na_rep, cthetaona, ona) + alpha_ro_exp(c_na_rep, cthetacna, cna) + 
-                    alpha_ro_exp(o_cl_rep, cthetaocl, ocl) + alpha_ro_exp(c_cl_rep, cthetaccl, ccl) +
-                    alpha_ro_exp(o_na_rep, cthetaona_2, ona_2) + alpha_ro_exp(c_na_rep, cthetacna_2, cna_2) + 
-                    alpha_ro_exp(o_cl_rep, cthetaocl_2, ocl_2) + alpha_ro_exp(c_cl_rep, cthetaccl_2, ccl_2))
-                                                                                  
-            disp += disp_coef[1]*cna6 + disp_coef[2]*ona6 + disp_coef[3]*ccl6 + disp_coef[4]*ocl6 +
-                    disp_coef[1]*cna26 + disp_coef[2]*ona26 + disp_coef[3]*ccl26 + disp_coef[4]*ocl26
+    for i:: Int16 = -nei:nei
+    for j:: Int16 = -nei:nei
+        r_nei = i*b1 + j*b2
+
+        for layer:: Int16 in 1:nl_surf
+        for ion:: Int16 in 1:2
+        for atom:: Int16 in 1:2
+
+            Δr =  pos_surf[layer][:,ion] + r_nei - mco[atom]
+            dist = norm(Δr)
+            cosθ = uco⋅Δr/dist
+
+            repulsion += alpha_ro_exp(rep_coeffs[ion][atom], cosθ, dist)
+            dispersion += disp_coef[ion,atom]/dist^6
+        end
+        end
         end
     end
-    rep = rep*K_stone
-    return rep, disp
+    end
+    return repulsion*K_stone, dispersion
 end
 
 

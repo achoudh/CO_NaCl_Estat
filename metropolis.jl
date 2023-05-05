@@ -108,7 +108,7 @@ function energy(x::Vector{Float64}) ::Float64
     return (out_attr+out_rep-out_disp) * joule2wn
 end
 
-initial_state::Vector{Float64} = [0.0,0.0,0.0,180.0,1.0] 
+initial_state::Vector{Float64} = [0.0,0.0,0.0,0.0,1.0] 
 
 
 @time res = simulated_annealing(initial_state, 30, 0.2)

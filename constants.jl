@@ -33,6 +33,15 @@ r_CO::Float64 = 1.14e-10       # CO bondlength in m
 a0_CO::Float64 = 5.64e-10      # CO layer lattice constant, m
 a0_NaCl::Float64 = 5.64e-10    # NaCl lattice constant, m
 a0_surf::Float64 = 3.99e-10    # NaCl surface lattice constant
+# NaCl lattice vectors
+b1::Vector{Float64} = [0,1,0]*a0_surf
+b2::Vector{Float64} = [1,0,0]*a0_surf
+b3::Vector{Float64} = [0,0,1]*a0_NaCl
+# Na and Cl positions for the 1st and 2nd layers
+nl_surf = 2
+pos_surf::Vector{Matrix{Float64}} = [ [[0.0, 0.0, 0.0] [-0.5*a0_surf, -0.5*a0_surf, 0.0]],
+             [[-0.5*a0_surf, -0.5*a0_surf, 0.0]-b3 [0.0, 0.0, 0.0]-b3] ]
+#[push!(pos_surf, reverse(pos_surf[end] .- b3,dims=2) ) for l in 1:nl_surf]
 #z_ml = 3.35e-10/a0_surf # 2.6e-10   # monolayer-surface distance
 
 v::Float64 = 0.4903e-10 #Oxygen
@@ -75,9 +84,9 @@ nlm::Int64 = 12
 lodd::Vector{Int64} = [ 1, 1,-1,-1, 3, 3,-3,-3, 1, 1,-1,-1 ]
 modd::Vector{Int64} = [ 1,-1,-1, 1, 1,-1,-1, 1, 3,-3,-3, 3 ]
 
-global lm ::Vector{Float64} = [sqrt(lodd[i]^2 + modd[i]^2) for i in 1:nlm]
-global lma::Vector{Float64} = [lm[i]*(-2*pi/a0_NaCl) for i in 1:nlm]
-global ret_c::Vector{Float64} = [(eps_NaCl/a0_NaCl)*(1/lm[i])*(-1)^((lodd[i]+modd[i])/2) * (1/(1+exp(-pi*lm[i]))) for i in 1:nlm]
+lm ::Vector{Float64} = sqrt.(lodd.^2 + modd.^2)
+lma::Vector{Float64} = -2*pi/a0_NaCl .* lm
+ret_c::Vector{Float64} = eps_NaCl/a0_NaCl ./ lm .* (-1).^((lodd+modd)/2) ./ (1 .+ exp.(-pi*lm))
 
 mom_C::Vector{Float64} = [0.18314*e, 0.33842*di_au, -0.90316*qu_au, -0.25179*oc_au, 0.13324*hx_au]
 mom_O::Vector{Float64} = [-0.02320*e, -0.29304*di_au, 0.09203*qu_au, -0.09083*oc_au, -0.02669*hx_au]
@@ -88,6 +97,10 @@ c_na_rep::Vector{Float64} = [4.5036e10, 0.4343e10, 2.9090e-10, -0.0636e-10, 0.04
 c_cl_rep::Vector{Float64} = [3.5542e10, 0.3156e10, 3.6047e-10, -0.0079e-10, 0.0948e-10]
 o_na_rep::Vector{Float64} = [5.1882e10, -0.1221e10, 2.7192e-10, -0.0074e-10, -0.0455e-10]
 o_cl_rep::Vector{Float64} = [3.8639e10, -0.0658e10, 3.2899e-10, 0.1018e-10, -0.0460e-10]
+rep_coeffs = [ [c_na_rep, o_na_rep], [c_cl_rep, o_cl_rep] ]
 K_stone::Float64 = 4.3597482e-21
-disp_coef::Vector{Float64} = [383.3, 256.6, 3935.9, 2633.0]/6.02214076*1e-80 #C-Na, O-Na, C-Cl, O-Cl
+
+# Dispersion coefficients
+# [ [C-Na, O-Na], [C-Cl, O-Cl] ]
+disp_coef::Matrix{Float64} = [ [383.3 256.6]; [3935.9 2633.0] ]/6.02214076*1e-80 
 
