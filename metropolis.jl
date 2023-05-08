@@ -5,8 +5,8 @@ include("Plots_default.jl")
 include("site_surface_interaction.jl")
 using Random
 
-function x_step(x::Vector{Float64})
-    rstep::Float64, astep::Float64 = 0.2, 10.0
+function x_step(x::Vector{Float64} ,rstep::Float64, astep::Float64)
+
     x_f = zeros(Float64, length(x))
     
     for i in 1:2
@@ -25,23 +25,17 @@ function x_step(x::Vector{Float64})
     return x_f    
 end
 
-function ang_range(x, min_val, max_val, astep)
-    x_f = x + (rand() - 0.5) * astep
-    while x_f < min_val || x_f > max_val  # check if x is within range
-        x_f = x + (rand() - 0.5) * astep # generate a new random value for x if it's not within range
-    end   
-    return x_f
-end
-
 acceptance_probability(delta::Float64, T::Float64)::Float64 = exp(-delta/T)
 
 function annealing_schedule(temp::Float64, cooling_rate::Float64)::Float64
     return temp * cooling_rate
 end
 
-function simulated_annealing(initial_state::Vector{Float64}, max_iterations::Int64, cooling_rate::Float64)
+function simulated_annealing(initial_state::Vector{Float64}, rstep::Float64, astep::Float64,  
+    cooling_rate::Float64, max_temperature::Float64, max_iterations::Int64, nift::Int64, tin::Int64)
+
     del::Vector{Float64} = []
-    int_min = zeros(Float64,3)
+    int_min = zeros(Float64,tin)
     # Initialize the current state
     current_state::Vector{Float64} = initial_state
     current_energy::Float64  = energy(current_state)
@@ -50,17 +44,16 @@ function simulated_annealing(initial_state::Vector{Float64}, max_iterations::Int
     best_state::Vector{Float64} = current_state
     best_energy::Float64  = current_energy
     
-    for tin in 1:3
+    for it::Int32 in 1:tin
     # Initialize the temperature
-    temp::Float64 = 100000.0
+    temp = max_temperature
     delta::Float64 = 0.0
     
-    for tk in 1:max_iterations
+    for tk::Int64 in 1:max_iterations # Loop over the iterations
 
-    # Loop over the iterations
-        for i::Float64 in 1:100 # max_iterations
+        for i::Int64 in 1:nift # number of iterations at the given temp
             # Generate a new state
-            new_state::Vector{Float64} = x_step(current_state)
+            new_state::Vector{Float64} = x_step(current_state, rstep, astep)
             new_energy::Float64  = energy(new_state)
             
             # Calculate the energy difference
@@ -84,18 +77,18 @@ function simulated_annealing(initial_state::Vector{Float64}, max_iterations::Int
         # Update the temperature
         temp = annealing_schedule(temp, cooling_rate)
     end
-    int_min[tin] = best_energy 
+    int_min[it] = best_energy 
     end
     return best_state, best_energy, del, int_min
 end
 
 
 function energy(x::Vector{Float64}) ::Float64
-    rvec::Vector{Float64} = x[1:3] * a0_surf
-    theta::Float64 = x[4] * pi / 180
-    phi::Float64 = x[5] * pi / 180
 
-    rvec[3] += 3.1e-10 
+    rvec::Vector{Float64} = x[1:3] * a0_surf
+    theta::Float64 = x[4] * degrees
+    phi::Float64 = x[5] * degrees
+
     stheta::Float64, sphi::Float64, costheta::Float64, cosphi::Float64 = sin(theta), sin(phi), cos(theta), cos(phi)
 
     ml_o::Vector{Float64} = rvec + [v*stheta*cosphi, v*stheta*sphi, v*costheta]
@@ -108,10 +101,10 @@ function energy(x::Vector{Float64}) ::Float64
     return (out_attr+out_rep-out_disp) * joule2wn
 end
 
-initial_state::Vector{Float64} = [0.0,0.0,0.0,0.0,1.0] 
+initial_state::Vector{Float64} = [0.0, 0.0, 3.1e-10/a0_surf, 0.0 , 1.0] 
 
 
-@time res = simulated_annealing(initial_state, 30, 0.2)
+@time res = simulated_annealing(initial_state, 0.1, 5.0, 0.1, 10000.0, 10, 100, 3)
 
 display(plot(res[3])) # .- res[3][1]))
 println(res[1])

@@ -17,6 +17,7 @@ eps_NaCl::Float64 = nu*e/(pi*eps0)
 # Unit conversion factors
 joule2wn::Float64 = 1.0/1.986445824171758e-23
 m2au::Float64 = 1.0/bohr_radius
+degrees::Float64 = pi/180.0
 
 # CO layer parameters
 nmols_uc::Int64 = 4
