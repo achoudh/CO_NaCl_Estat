@@ -32,7 +32,7 @@ function annealing_schedule(temp::Float64, cooling_rate::Float64)::Float64
 end
 
 function simulated_annealing(initial_state::Vector{Float64}, rstep::Float64, astep::Float64,  
-    cooling_rate::Float64, max_temperature::Float64, max_iterations::Int64, nift::Int64, tin::Int64)
+    cooling_rate::Float64, max_temperature::Float64, max_iterations::Int64 , nift::Int64, tin::Int64)
 
     del::Vector{Float64} = []
     int_min = zeros(Float64,tin)
