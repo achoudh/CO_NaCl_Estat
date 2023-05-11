@@ -109,17 +109,16 @@ end
 # dtanh(x::Vector{Float64}) = tanh.(x) .* (1.0 .- tanh.(x))
 
 function nnfit_ococ(ndim, ntot, r0, idv)
-    global s0 = 7
-    global s1 = 45
-    global s2 = 45
+
     vx = zeros(Float64, ntot)
     # dv = zeros(Float64, ndim, ntot)
 
-    if ndim != s0
-        error("ndim ≠ s0")
+    if ndim != s0_nn
+        error("ndim ≠ s0_nn")
     end
 
-    vx = nsim(r0[:, 1], idv, s0, s1, s2, rg[:,:], w1[:,:], b1[:], w2[:,:], b2[:], w3[:], b3, vg)
+    vx = nsim(r0[:, 1], idv, s0_nn, s1_nn, s2_nn, rg_nn[:,:], 
+              w1_nn[:,:], b1_nn[:], w2_nn[:,:], b2_nn[:], w3_nn[:], b3_nn, vg_nn)
    
     return vx
 end
@@ -170,26 +169,7 @@ function pes_ococ(r::Vector{Float64})
     return v #, dv
 end
 
-using LinearAlgebra
-using DelimitedFiles
-global w1::Matrix{Float64} = transpose(readdlm("w1.txt"))
-global w2::Matrix{Float64} = transpose(readdlm("w2.txt"))
-global b1::Matrix{Float64} = readdlm("b1.txt")
-global b2::Matrix{Float64} = readdlm("b2.txt")
-global w3::Matrix{Float64} = readdlm("w3.txt")
-global rg::Matrix{Float64} = transpose(readdlm("rg.txt"))
-global vg::Vector{Float64} = [-702.59000000000003, 22446.305300000000]
-global b3::Float64 = 2.6335296521641700
-
-# w1 = w1[:,:]
-# w2 = w2[:,:]
-# b1 = b1[:]
-# b2 = b2[:]
-# w3 = w3[:]
-# rg = rg[:,:]
-
 function co_co_int_nu(R12::Vector{Float64}, phi1::Float64, theta1::Float64, phi2::Float64, theta2::Float64)
-    #    V_CO_CO, Vqq, Vqmu, Vmumu, VmuQu, VmuO, VQuQu, VQuO, VOO, V_rep)
     # Determines the electrostatic interaction energy between two CO molecules
 
     # local axis unit vectors

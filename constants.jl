@@ -48,37 +48,25 @@ pos_surf::Vector{Matrix{Float64}} = [ [[0.0, 0.0, 0.0] [-0.5*a0_surf, -0.5*a0_su
 v::Float64 = 0.4903e-10 #Oxygen
 w::Float64 = 0.6437e-10 #Carbon
 bc::Float64 = 0.0817e-10 # bond center
-# Multipole constants
-# see Jascha's Mathematica Notebook "P:\Research\CO-NaCl\Theory\Electrostatic model\MM_R_fit\R_MM_fit.nb"
+
 rot::Matrix{Float64} = [cos(pi/4) sin(pi/4) 0.0; -sin(pi/4) cos(pi/4) 0.0; 0.0 0.0 1.0]
 
-# dipole
-a10::Float64 =  3.63272
-a11::Float64 = -7.28409
-a12::Float64 =  7.5581
-a13::Float64 = -4.28056
-a14::Float64 =  1.30636
-a15::Float64 = -0.215764
-a16::Float64 =  0.0182316
-a17::Float64 = -0.000619188
-# quadrupole
-a20::Float64 = -14.5407
-a21::Float64 =  28.2314
-a22::Float64 = -25.6766
-a23::Float64 =  11.9892
-a24::Float64 =  -2.99969
-a25::Float64 =   0.404491
-a26::Float64 =  -0.0273732
-a27::Float64 =   0.00071271
-# octapole
-a30::Float64 =  6.45176
-a31::Float64 = -10.3863
-a32::Float64 =  2.47699
-a33::Float64 =  5.54757
-a34::Float64 = -3.83351
-a35::Float64 =  0.969093
-a36::Float64 = -0.108525
-a37::Float64 =  0.00450608
+# CO-CO NN-PES data
+# Dimensions of arrays for NN-PES
+s0_nn = 7
+s1_nn = 45
+s2_nn = 45
+
+w1_nn::Matrix{Float64} = transpose(readdlm("w1.txt"))
+w2_nn::Matrix{Float64} = transpose(readdlm("w2.txt"))
+b1_nn::Matrix{Float64} = readdlm("b1.txt")
+b2_nn::Matrix{Float64} = readdlm("b2.txt")
+w3_nn::Matrix{Float64} = readdlm("w3.txt")
+rg_nn::Matrix{Float64} = transpose(readdlm("rg.txt"))
+vg_nn::Vector{Float64} = [-702.59000000000003, 22446.305300000000]
+b3_nn::Float64 = 2.6335296521641700
+
+
 
 # Arrays of all odd integer combination (l,m) up to |l|,|m|<3
 nlm::Int64 = 12
@@ -104,4 +92,6 @@ K_stone::Float64 = 4.3597482e-21
 # Dispersion coefficients
 # [ [C-Na, O-Na], [C-Cl, O-Cl] ]
 disp_coef::Matrix{Float64} = [ [383.3 256.6]; [3935.9 2633.0] ]/6.02214076*1e-80 
+
+
 
