@@ -21,7 +21,7 @@ flgs = zeros(Int32, 5*nmols_ml)
 theta_uc = zeros(Float64, 4) 
 phi_uc = zeros(Float64, 4)
 # monolayer-surface distance (reduced units)
-z_ml = 3.1e-10/a0_surf
+z_ml = 3.35e-10/a0_surf
 # get unit cell lattice reduced positions, bondlengths, and orientation of monolayer molecules
 com0_ml, bondlength_ml, phi_ml, theta_ml = monolayer(theta_uc, phi_uc, z_ml)
 # deviation vectors of molecular positions (r = com0 + δr)
@@ -58,7 +58,7 @@ println("Initial state:")
 println(initial_state)
 println(energy(initial_state,com0_ml))
 @time res = simulated_annealing(initial_state, com0_ml, δq, flgs, 
-                                0.1, 10000.0, 100, 100, 3)
+                                0.01, 20000.0, 1000, 10, 3)
 
 display(plot(res[3])) # .- res[3][1]))
 println(res[1])
