@@ -46,7 +46,7 @@ function mol_surf_rep_stone(op::Vector{Float64}, cp::Vector{Float64}, nei::Int64
     end
     end
 
-    return repulsion*K_stone, dispersion
+    return repulsion*K_stone - dispersion
 end
 
 
