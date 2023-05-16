@@ -54,11 +54,12 @@ flgs[1 + 1*nmols_ml:2*nmols_ml] = fill(2, nmols_ml)
 flgs[1 + 2*nmols_ml:4*nmols_ml] = fill(3, 2*nmols_ml)
 flgs[1 + 4*nmols_ml:5*nmols_ml] = fill(4, nmols_ml)
 
-println("Initial state:")
-println(initial_state)
-println(energy(initial_state,com0_ml))
+#println("Initial state:")
+#println(initial_state)
+#println(energy(initial_state,com0_ml))
+
 @time res = simulated_annealing(initial_state, com0_ml, δq, flgs, 
-                                0.1, 10000.0, 100, 100, 3)
+                                0.1, 10000.0, 300, 10, 1)
 
 display(plot(res[3])) # .- res[3][1]))
 println(res[1])
