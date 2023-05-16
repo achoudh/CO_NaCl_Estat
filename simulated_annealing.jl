@@ -21,6 +21,29 @@ function new_coords(x::Vector{Float64}, δq::Vector{Float64}, flgs::Vector{Int32
     return x_new
 end
 
+function new_coords(x::Vector{Float64}, δq::Vector{Float64}, flgs::Vector{Int32}, 
+                    i::Int)
+
+    f = flgs[i]
+    x_new::Float64 = 0
+
+    if f==0 # a frozen coordinate
+        x_new = x[i]
+    else
+        x_new = x[i] + (rand() - 0.5)*δq[i]
+        if f == 1 # θ-type coordinates
+            x_new = mod(x_new, 360.0)
+            x_new = x_new > 180.0 ?  360.0 - x_new : x_new
+        elseif f == 2 # ϕ-type coordinates
+            x_new = mod(x_new, 360.0)
+        elseif f == 3 # in-plane coordinates
+            x_new -= round(x_new)
+        end
+    end
+
+    return x_new
+end
+
 acceptance_probability(delta::Float64, T::Float64)::Float64 = exp(-delta/T)
 
 function annealing_schedule(temp::Float64, cooling_rate::Float64)::Float64
@@ -33,14 +56,14 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice,
                                 max_temperature::Float64, n_iterations::Int64 , 
                                 nstep_thermalization::Int64, n_annealing_cycles::Int64)
 
-    del::Vector{Float64} = []
     int_min = zeros(Float64,n_annealing_cycles)
     # Initialize the current state
-    current_state::Vector{Float64} = initial_state
+    current_state::Vector{Float64} = deepcopy(initial_state)
     current_energy::Float64  = energy(current_state,lattice)
+    del::Vector{Float64} = [current_energy]
     
     # Initialize the best state
-    best_state::Vector{Float64} = current_state
+    best_state::Vector{Float64} = deepcopy(current_state)
     best_energy::Float64  = current_energy
     
     for it::Int32 in 1:n_annealing_cycles
@@ -50,25 +73,25 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice,
     
         for tk::Int64 in 1:n_iterations # Loop over the iterations
 
-            for i::Int64 in 1:nstep_thermalization # number of iterations at the given temp
+            for i::Int64 in 1:size(current_state,1) # 1:nstep_thermalization # number of iterations at the given temp
                 # Generate a new state
-                new_state::Vector{Float64} = new_coords(current_state, δq, flgs)
+                new_state = deepcopy(current_state)
+                new_state[i] = new_coords(current_state, δq, flgs,i)
                 new_energy::Float64  = energy(new_state, lattice)
-#println((current_energy, new_energy))
 
                 # Calculate the energy difference
                 delta  = new_energy - current_energy
 
                 # Decide whether to accept the new state
                 if delta <= 0 || rand() < acceptance_probability(delta, temp)
-                    current_state = new_state
+                    current_state[:] = new_state[:]
                     current_energy = new_energy
                     push!(del, current_energy)
                 end
                 
                 # Update the best state if necessary
                 if current_energy < best_energy
-                    best_state = current_state
+                    best_state[:] = current_state[:]
                     best_energy = current_energy
                 end
                 
