@@ -1,5 +1,7 @@
 # CO_NaCl_Estat
-First version of Metropolis calculation of CO/NaCl
+Simulated annealing Metropolis search for the global minimum 
+for CO monolayer at NaCl(100)
+    CO-NaCl interaction is modeled by Meredith & Stone potential
+    CO-CO interaction is modeled by NN-PES by Guo's group
 
-Now, we are in local pc
 
