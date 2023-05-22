@@ -17,6 +17,12 @@ initial_state = zeros(Float64, 5*nmols_ml)
 δq = zeros(Float64, 5*nmols_ml)
 flgs = zeros(Int32, 5*nmols_ml)
 
+θ_over::Vector{Float64} = [pi*3.0/4.0, pi/4.0, 3.0*pi/4.0, pi/4.0, 3.0*pi/4.0, pi/4.0, 3.0*pi/4.0, pi/4.0]
+ϕ_over::Vector{Float64} = [-pi/2.0, 0.0, -pi/2.0, 0.0, pi/2.0, pi, pi/2.0, pi]
+
+comol, bondlength_ol, phi_ol, theta_ol = overlayer(θ_over, ϕ_over, dz, z_ml)
+
+
 # orientation of molecules in a unit cell
 theta_uc = zeros(Float64, 4) + fill(30,4)
 phi_uc = zeros(Float64, 4) + [0,180,0,180]
