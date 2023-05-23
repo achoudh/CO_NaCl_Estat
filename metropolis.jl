@@ -34,10 +34,10 @@ com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
 # orientation of molecules in an overlayer's unit cell
 θ_uc = [ 3, 1, 3, 1, 3, 1, 3, 1]*pi/4.0
 ϕ_uc = [-1, 0,-1, 0, 1, 2, 1, 2]*pi/2.0
-# monolayer-overlayer distance (in units of CO lattice constant)
-dz = 0.5
+# overlayer-surface distance (reduced units)
+z_ol = z_ml + 0.5*a0_CO/a0_surf
 # get an overlayer molecules' reduced positions and orientation
-com_ol, phi_ol, theta_ol = overlayer(θ_uc, ϕ_uc, z_ml, dz)
+com_ol, phi_ol, theta_ol = overlayer(θ_uc, ϕ_uc, z_ol)
 
 # Set initial geometry
 

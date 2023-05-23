@@ -24,7 +24,7 @@ function monolayer(θ_uc::Vector{Float64}, ϕ_uc::Vector{Float64}, z::Float64)
 end
 
 # Defines c.-of-m. and orientation of the molecules in overlayer
-function overlayer(θ_uc::Vector{Float64}, ϕ_uc::Vector{Float64}, z::Float64, dz::Float64)
+function overlayer(θ_uc::Vector{Float64}, ϕ_uc::Vector{Float64}, z::Float64)
 
     com = zeros(nmols_ucol*nx*ny*nz, 3)
 
@@ -44,7 +44,7 @@ function overlayer(θ_uc::Vector{Float64}, ϕ_uc::Vector{Float64}, z::Float64, d
             for k in 0:nz-1
                 com[n:n+nmols_ucol-1,1] .= com_uc[:,1] .+ 2*i
                 com[n:n+nmols_ucol-1,2] .= com_uc[:,2] .+ 2*j
-                com[n:n+nmols_ucol-1,3] .= com_uc[:,3] .+ (2*a*(k + dz) + z)
+                com[n:n+nmols_ucol-1,3] .= com_uc[:,3] .+ (2*a*k + z)
                 n += nmols_ucol
             end
         end
