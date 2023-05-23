@@ -17,21 +17,27 @@ initial_state = zeros(Float64, 5*nmols_ml)
 δq = zeros(Float64, 5*nmols_ml)
 flgs = zeros(Int32, 5*nmols_ml)
 
-θ_over::Vector{Float64} = [pi*3.0/4.0, pi/4.0, 3.0*pi/4.0, pi/4.0, 3.0*pi/4.0, pi/4.0, 3.0*pi/4.0, pi/4.0]
-ϕ_over::Vector{Float64} = [-pi/2.0, 0.0, -pi/2.0, 0.0, pi/2.0, pi, pi/2.0, pi]
+# construct a monolayer
 
-comol, bondlength_ol, phi_ol, theta_ol = overlayer(θ_over, ϕ_over, dz, z_ml)
-
-
-# orientation of molecules in a unit cell
-theta_uc = zeros(Float64, 4) + fill(30,4)
-phi_uc = zeros(Float64, 4) + [0,180,0,180]
+# orientation of molecules in a monolayer's unit cell
+θ_uc = zeros(Float64, 4) + fill(30,4)*degrees
+ϕ_uc = zeros(Float64, 4) + [0,180,0,180]*degrees
 # monolayer-surface distance (reduced units)
 z_ml = 3.35e-10/a0_surf
-# get unit cell lattice reduced positions, bondlengths, and orientation of monolayer molecules
-com0_ml, bondlength_ml, phi_ml, theta_ml = monolayer(theta_uc, phi_uc, z_ml)
+# get a monolayer molecules' reduced positions and orientation
+com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
 # deviation vectors of molecular positions (r = com0 + δr)
 δr_ml = zeros(Float64,nmols_ml,3)
+
+# construct an overlayer
+
+# orientation of molecules in an overlayer's unit cell
+θ_uc = [ 3, 1, 3, 1, 3, 1, 3, 1]*pi/4.0
+ϕ_uc = [-1, 0,-1, 0, 1, 2, 1, 2]*pi/2.0
+# monolayer-overlayer distance (in units of CO lattice constant)
+dz = 0.5
+# get an overlayer molecules' reduced positions and orientation
+com_ol, phi_ol, theta_ol = overlayer(θ_uc, ϕ_uc, z_ml, dz)
 
 # Set initial geometry
 
@@ -40,8 +46,8 @@ initial_state[1 + 1*nmols_ml:2*nmols_ml] = phi_ml       # ϕ
 initial_state[1 + 2*nmols_ml:5*nmols_ml] = vec(δr_ml)   # δr
 
 # Set step sizes
-δθ = 10.0    # degrees
-δϕ = 10.0    # degrees
+δθ = 10.0*degrees
+δϕ = 10.0*degrees
 δxy = 0.05   # surface lattice units
 δz = 0.1    # surface lattice units
 δq[1 + 0*nmols_ml:1*nmols_ml] = fill(δθ, nmols_ml)
