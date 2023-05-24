@@ -169,7 +169,7 @@ function pes_ococ(r::Vector{Float64})
     return v #, dv
 end
 
-function co_co_int_nu(R12::Vector{Float64}, phi1::Float64, theta1::Float64, phi2::Float64, theta2::Float64)
+function co_co_NNpes(R12::Vector{Float64}, phi1::Float64, theta1::Float64, phi2::Float64, theta2::Float64)
     # Determines the electrostatic interaction energy between two CO molecules
 
     # local axis unit vectors
