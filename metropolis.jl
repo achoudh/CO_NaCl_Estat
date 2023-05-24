@@ -20,8 +20,8 @@ flgs = zeros(Int32, 5*nmols_ml+1)
 # construct a monolayer
 
 # orientation of molecules in a monolayer's unit cell
-θ_uc = zeros(Float64, 4) + fill(30,4)*degrees
-ϕ_uc = zeros(Float64, 4) + [0,180,0,180]*degrees
+θ_uc = zeros(Float64, 4) + [0.0,180.0,0.0,0.0]*degrees
+ϕ_uc = zeros(Float64, 4) + [0.0,180.0,0.0,180.0]*degrees
 # monolayer-surface distance (reduced units)
 z_ml = 3.35e-10/a0_surf
 # get a monolayer molecules' reduced positions and orientation
@@ -68,7 +68,8 @@ initial_state[1 + 5*nmols_ml]            = 0.0          # overlayer height devia
 flgs[1 + 0*nmols_ml:1*nmols_ml]   = fill(1, nmols_ml)
 flgs[1 + 1*nmols_ml:2*nmols_ml]   = fill(2, nmols_ml)
 flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(3, 2*nmols_ml)
-flgs[1 + 4*nmols_ml:5*nmols_ml+1] = fill(4, nmols_ml+ 1 ) # adding the overlayer shift
+flgs[1 + 4*nmols_ml:5*nmols_ml]   = fill(4, nmols_ml) 
+flgs[1 + 5*nmols_ml]              = 4 # adding the overlayer shift
 
 println("Initial state:")
 #println(initial_state)
@@ -78,9 +79,9 @@ display_structure_unitmono(initial_state, com0_ml)
 
 @time res = simulated_annealing(initial_state, com0_ml,com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
-                            0.1, 100000.0, 200, 1, 3)
+                            0.5, 100000.0, 200, 1, 3)
 
-display(plot(res[3])) # .- res[3][1]))
+display(plot(res[3], color = :black, label = " ", xlabel = "accepted steps", ylabel = "energy/cm-1")) # .- res[3][1]))
 println(res[1])
 println(res[2])
 println(res[4])

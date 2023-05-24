@@ -5,8 +5,8 @@ function new_coords(x::Vector{Float64}, δq::Vector{Float64}, flgs::Vector{Int32
     x_new::Float64 = x[i] + (rand() - 0.5)*δq[i]
 
     if f == 1 # θ-type coordinates
-        x_new = mod(x_new, 360.0)
-        x_new = x_new > 180.0 ?  360.0 - x_new : x_new
+        x_new = mod(x_new, 2*pi)
+        x_new = x_new > pi ?  2*pi - x_new : x_new
     elseif f == 2 # ϕ-type coordinates
         x_new = mod(x_new, 360.0)
     elseif f == 3 # in-plane coordinates
