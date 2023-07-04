@@ -1,12 +1,12 @@
 # Initialization
 
 using Random
-using PlotlyJS, CSV, DataFrames
+# using PlotlyJS, CSV, DataFrames
 using LinearAlgebra
 
 #using Plots
 include("functions.jl")
-include("constants.jl")
+include("exciton_parameters.jl")
 
 com, θ, ϕ = monolayer(nx, ny, θu, Φu)
 com2, θff, ϕff = monolayer(nx, ny, θf, Φf)
