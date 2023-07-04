@@ -1,4 +1,6 @@
-include("initialization.jl")
+using Plots
+
+include("exciton_initialization.jl")
 
 σ = eigenvals ./ nmols_ml
 esu(l, i) = eigenvecs[i, l] * (μ01 .* eu[i,:]) #each coloume is eigen vector l
@@ -10,14 +12,13 @@ pl = [sum([esu(l, i) for i in 1:nmols_ml]) for l in 1:nmols_ml]
 σpda = [unit2*σ[n1]*μEpda[n1] for n1 in 1:nmols_ml]
 σsda = [unit2*σ[n1]*μEsda[n1] for n1 in 1:nmols_ml]
 
-#using Plots
-# plot(crossdataPda, crossdataSda, 
-#      xlabel = "Frequency/cm⁻¹", 
-#      ylabel = "Cross section/a.u.", 
-#      label = ["Absorption" "Emission"], 
-#      size = (600, 400), 
-#      legend = :topleft, 
-#      grid = :none)
+#  plot(crossdataPda, crossdataSda, 
+#       xlabel = "Frequency/cm⁻¹", 
+#       ylabel = "Cross section/a.u.", 
+#       label = ["Absorption" "Emission"], 
+#       size = (600, 400), 
+#       legend = :topleft, 
+#       grid = :none)
 
      # Line-shape function (gaussian)
 #plot(eigenvals, σpda)
@@ -61,21 +62,20 @@ is(x) = sum([σsda[n] * gssn(x, eigenvals[n], 1.1) for n in 1:nmols_ml])
 
 # create the plot
 
-#Create the traces for each spectrum
-trace1 = scatter(x=νk, y=ip.(νk), mode="lines", name="p-pol")
-trace2 = scatter(x=νk, y=is.(νk), mode="lines", name="s-pol")
+# Create the traces for each spectrum
+ trace1 = plot(νk, [ip.(νk) is.(νk)], label=["p-pol" "s-pol"])
+ 
+# #Create the plot layout
+# layout = Layout(
+#     title="Exciton result",
+#     xaxis_title="Wavelength",
+#     yaxis_title="Intensity",
+#     bgcolor="white"
+# )
 
-#Create the plot layout
-layout = Layout(
-    title="Exciton result",
-    xaxis_title="Wavelength",
-    yaxis_title="Intensity",
-    bgcolor="white"
-)
+# # Combine the traces and layout into a plot object
+# plot_data = [trace1, trace2]
+# plot1 = plot(plot_data, layout)
 
-# Combine the traces and layout into a plot object
-plot_data = [trace1, trace2]
-plot1 = plot(plot_data, layout)
-
-# Display the plot in the notebook
-display(plot1)
+# # Display the plot in the notebook
+# display(plot1)

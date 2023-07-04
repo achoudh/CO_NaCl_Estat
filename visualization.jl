@@ -1,12 +1,12 @@
 using Plots
 gr()
+plotly()
+
 # Set default plot attributes
 default(titlefontsize=20, labelfontsize=16, linewidth=2, legendfontsize=14, 
         guidefont=font(16), tickfont=font(14), thickness_scaling=1.15, frame=:box, size = (900, 600))
 
 function nacl_show(r_Cl,r_Na)
-
-        plotly()
 
         ll = nx*2 - 1
         mm = ny*2 - 1
@@ -20,7 +20,7 @@ function nacl_show(r_Cl,r_Na)
 end
 
 
-function display_structure_unitmono(x, lattice_ml)
+function structure_unitmono(x, lattice_ml)
         
         vv, ww = [v, w] ./a0_surf
         
@@ -38,10 +38,10 @@ function display_structure_unitmono(x, lattice_ml)
         end
         
         co_nacl = nacl_show(20, 10)
-#        display(nacl_show(20, 10))
         scatter3d!(co_nacl,ml_c[:,1],ml_c[:,2],ml_c[:,3],ms=9,c=:black,camera=(0,90,),label="C")
         scatter3d!(co_nacl,ml_o[:,1],ml_o[:,2],ml_o[:,3],ms=8,c=:red, ticks=nothing, label = "O")
-        zlims!(co_nacl,0,1)
-return display(co_nacl)
+        #zlims!(co_nacl,0,1)
+
+return co_nacl
 end
         

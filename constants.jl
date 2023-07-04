@@ -93,5 +93,31 @@ K_stone::Float64 = 4.3597482e-21
 # [ [C-Na, O-Na], [C-Cl, O-Cl] ]
 disp_coef::Matrix{Float64} = [ [383.3 256.6]; [3935.9 2633.0] ]/6.02214076*1e-80 
 
+# Exciton parameters
+
+ν0 = [2050.82, 2036.1]
+# Data to built up the wavenumber array
+range = 20  # "Wavenumbers"
+dtponts = 5*200
+step = 2 * (range / dtponts)
+νk = collect(ν0[2] - range :step:ν0[1] + range)
+
+μ00, μ11, μ01 = -0.112, -0.087, 0.105 # "Debyes"; μ00 and μ11: R.Disselkamp et al., Surface Science 240 (1990) 193-210; for 12C16O. μ01 calculated for 13C18O.
+unit1 = 5034.12*1e-30 # conversion factor from Debye^2/m^3 to wavenumber
+unit2 = 7.51691023
+
+#electric field
+θe = 45.0*pi/180 # Tilt of incident beam
+nar, ncr = 1.0, 1.52
+nrat = nar/ncr
+
+Tx = 2*cos(θe)*sqrt(1 - ((nar/ncr)^2)*(sin(θe))^2) / ((ncr/nar) + (cos(θe))^(-1)*sqrt(1 - ((nar/ncr)^2)*(sin(θe))^2));
+Ty = 2 / (1 + (ncr/nar)*(cos(θe))^(-1)*sqrt(1 - ((nar/ncr)^2)*(sin(θe))^2));
+Tz = 2*(sin(θe))^2 / (1 + (nar/ncr)*(cos(θe))^(-1)*sqrt(1 - ((nar/ncr)^2)*(sin(θe))^2));
+
+Tp, Ts = [[sqrt(Tx), 0.0, sqrt(Tz)],[0.0, sqrt(Ty), 0.0]]
+
+ep, es = Tp, Ts;
+
 
 

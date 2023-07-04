@@ -46,8 +46,8 @@ function display_structure(comml, θ_ml, ϕ_ml)
     na_r = hcat(posna...)
     cl_r = hcat(poscl...)
 
-    na = scatter3d(x=na_r[1,:], y=na_r[2,:], z=na_r[3,:], mode="markers", marker_size=nac, marker_color ="blue")
-    cl = scatter3d(x=cl_r[1,:], y=cl_r[2,:], z=cl_r[3,:], mode="markers", marker_size=cls, color =:green)
+    # na = scatter3d(x=na_r[1,:], y=na_r[2,:], z=na_r[3,:], mode="markers", marker_size=nac, marker_color ="blue")
+    # cl = scatter3d(x=cl_r[1,:], y=cl_r[2,:], z=cl_r[3,:], mode="markers", marker_size=cls, color =:green)
 
     vv = 0.483/a0_surf
     ww = 0.645/a0_surf

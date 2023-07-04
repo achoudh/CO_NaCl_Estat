@@ -1,11 +1,10 @@
 # Initialization
 
 using Random
-# using PlotlyJS, CSV, DataFrames
+#using PlotlyJS, CSV, DataFrames
 using LinearAlgebra
 
-#using Plots
-include("functions.jl")
+include("exciton_functions.jl")
 include("exciton_parameters.jl")
 
 com, θ, ϕ = monolayer(nx, ny, θu, Φu)
@@ -26,7 +25,7 @@ for i in eachindex(pop)
     end
 end
 
-display_structure(com, θ, ϕ)
+# display_structure(com, θ, ϕ)
 
 eu = zeros(Float64, nmols_ml, 3) #Orientation of the dipole moments of each vectors
 for i in 1:nmols_ml
