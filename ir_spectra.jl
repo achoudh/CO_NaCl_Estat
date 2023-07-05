@@ -41,61 +41,61 @@ function hstatT(ev, eu, com0_ml, ml_in)
 end
 
 # IR spectra
-function ir_spectra(νk, x, com0_ml)
+function ir_spectra(νk, x, com0_ml, Δν)
 
-θ = x[1+0*nmols_ml:1*nmols_ml]
-ϕ = x[1+1*nmols_ml:2*nmols_ml]
-ml_in = x[1+2*nmols_ml:5*nmols_ml]
+    θ = x[1+0*nmols_ml:1*nmols_ml]
+    ϕ = x[1+1*nmols_ml:2*nmols_ml]
+    ml_in = x[1+2*nmols_ml:5*nmols_ml]
 
-# Unperturbed eigenvalues
-ev = zeros(nmols_ml)
-for i in 1:nmols_ml
-    ev[i] = θ[i] < 0.5*pi ? ν0[1] : ν0[2]
-end
-
-# Orientation of the dipole moments of each vectors
-eu = zeros(nmols_ml, 3) 
-for i in 1:nmols_ml
-    eu[i,:] = [sin(θ[i]) * cos(ϕ[i]), sin(θ[i]) * sin(ϕ[i]), cos(θ[i])]
-end
-
-eigenvals, eigenvecs = hstatT(ev, eu, com0_ml, ml_in)
-σ = eigenvals ./ nmols_ml
-
-μEpda = zeros(nmols_ml)
-μEsda = zeros(nmols_ml)
-μEp = zeros(nmols_ml)
-μEs = zeros(nmols_ml)
-pl = zeros(nmols_ml,3)
-for m in 1:nmols_ml # loop over eigenvecs
-    for i in 1:nmols_ml # loop over molecules
-        pl[m,:] += eigenvecs[i, m]*(μ01 .* eu[i,:])
+    # Unperturbed eigenvalues
+    ev = zeros(nmols_ml)
+    for i in 1:nmols_ml
+        ev[i] = θ[i] < 0.5*pi ? ν0[1] : ν0[2]
     end
-    # Single domain
-    μEp[m] = dot(pl[m,:],ep)^2
-    μEs[m] = dot(pl[m,:],es)^2
-    # Domain average
-    μEpda[m] = (0.5*((pl[m,1])^2 + (pl[m,2])^2)*Tx + (pl[m,3])^2 *Tz)
-    μEsda[m] = 0.5*(pl[m,1]^2 + pl[m,2]^2)*Ty
-    
-end
 
-ipda = zeros(size(νk,1))
-isda = zeros(size(νk,1))
-ip = zeros(size(νk,1))
-is = zeros(size(νk,1))
-
-for (iν,ν) in enumerate(νk)
-    for m in 1:nmols_ml
-        gp = gssn(ν, eigenvals[m], 0.4)#1.15
-        gs = gssn(ν, eigenvals[m], 0.4)
-        ipda[iν] += unit2*σ[m]*μEpda[m] * gp
-        isda[iν] += unit2*σ[m]*μEsda[m] * gs
-        ip[iν] += unit2*σ[m]*μEp[m] * gp
-        is[iν] += unit2*σ[m]*μEs[m] * gs
+    # Orientation of the dipole moments of each vectors
+    eu = zeros(nmols_ml, 3) 
+    for i in 1:nmols_ml
+        eu[i,:] = [sin(θ[i]) * cos(ϕ[i]), sin(θ[i]) * sin(ϕ[i]), cos(θ[i])]
     end
-end
 
-return ipda, isda, ip, is
+    eigenvals, eigenvecs = hstatT(ev, eu, com0_ml, ml_in)
+    σ = eigenvals ./ nmols_ml
+
+    μEpda = zeros(nmols_ml)
+    μEsda = zeros(nmols_ml)
+    μEp = zeros(nmols_ml)
+    μEs = zeros(nmols_ml)
+    pl = zeros(nmols_ml,3)
+    for m in 1:nmols_ml # loop over eigenvecs
+        for i in 1:nmols_ml # loop over molecules
+            pl[m,:] += eigenvecs[i, m]*(μ01 .* eu[i,:])
+        end
+        # Single domain
+        μEp[m] = dot(pl[m,:],ep)^2
+        μEs[m] = dot(pl[m,:],es)^2
+        # Domain average
+        μEpda[m] = (0.5*((pl[m,1])^2 + (pl[m,2])^2)*Tx + (pl[m,3])^2 *Tz)
+        μEsda[m] = 0.5*(pl[m,1]^2 + pl[m,2]^2)*Ty
+        
+    end
+
+    ipda = zeros(size(νk,1))
+    isda = zeros(size(νk,1))
+    ip = zeros(size(νk,1))
+    is = zeros(size(νk,1))
+
+    for (iν,ν) in enumerate(νk)
+        for m in 1:nmols_ml
+            gp = gssn(ν, eigenvals[m], Δν)#1.15
+            gs = gssn(ν, eigenvals[m], Δν)
+            ipda[iν] += unit2*σ[m]*μEpda[m] * gp
+            isda[iν] += unit2*σ[m]*μEsda[m] * gs
+            ip[iν] += unit2*σ[m]*μEp[m] * gp
+            is[iν] += unit2*σ[m]*μEs[m] * gs
+        end
+    end
+
+    return ipda, isda, ip, is
 end
 

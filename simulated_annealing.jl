@@ -16,7 +16,7 @@ function new_coords(x::Vector{Float64}, δq::Vector{Float64}, flgs::Vector{Int32
     return x_new
 end
 
-# Method to calculate the total energy
+# Method to calculate the total energy (overlayer-monolayer + Overlayer-Surface)
 function energy_ol(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol) 
 
     theta_ml = x[1+0*nmols_ml:1*nmols_ml]
@@ -55,8 +55,8 @@ function energy_ol(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol)
  return pot_mlol + pot_olsurf*joule2wn
 end 
 
-# Method to calculate the total energy
-function energy(x,lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol) 
+# Method to calculate the total energy (intra-monolayer + monolayer-Surface)
+function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol) 
 
     theta_ml = x[1+0*nmols_ml:1*nmols_ml]
     phi_ml =   x[1+1*nmols_ml:2*nmols_ml]
@@ -92,7 +92,7 @@ function energy(x,lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol)
 end 
 
 # Method to calculate the ith molecule contribution into the energy
-function energy(x,lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol,i) 
+function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol, i) 
 
     theta_ml = x[1+0*nmols_ml:1*nmols_ml]*degrees 
     phi_ml = x[1+1*nmols_ml:2*nmols_ml]*degrees
@@ -160,6 +160,9 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml, lattice
     best_energy::Float64  = current_energy
     delta::Float64 = 0.0
 
+    # Keep track of all best states
+    all_best_states = zeros(Float64, n_annealing_cycles, size(initial_state,1))
+
     # Exclude frozen Dofs
     flex_dofs = (1:size(initial_state,1))[flgs .!=0]
 
@@ -171,16 +174,17 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml, lattice
 
             for i::Int64 in flex_dofs # Loop over DoFs
 
-                # Find a molecule to which ith DoF belongs
+                # Get the overlayer interaction w.r.t. δz_ol
                 if i == flex_dofs[end]
                     # Get the imol-th energy contribution
                     current_energy_imol  = energy_ol(current_state, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc)
                     # Generate a new state
-                    new_state[i] = new_coords(current_state, δq, flgs,i)
-                    new_energy_imol  = energy_ol(new_state, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc)
+                    new_state[i]         = new_coords(current_state, δq, flgs,i)
+                    new_energy_imol      = energy_ol(new_state, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc)
                     # Calculate the energy difference
                     delta  = new_energy_imol - current_energy_imol
                 else
+                    # Find a molecule to which ith DoF belongs
                     imol = mod(i-1, nmols_ml) + 1
 #println((i, imol,current_energy))
                     # Get the imol-th energy contribution
@@ -188,8 +192,8 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml, lattice
 #println(current_energy_imol)
 #println(current_state)
                     # Generate a new state
-                    new_state[i] = new_coords(current_state, δq, flgs,i)
-                    new_energy_imol  = energy(new_state, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc, imol)
+                    new_state[i]         = new_coords(current_state, δq, flgs,i)
+                    new_energy_imol      = energy(new_state, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc, imol)
                     # Calculate the energy difference
                     delta  = new_energy_imol - current_energy_imol
 #println(new_energy_imol)
@@ -217,6 +221,15 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml, lattice
             temp = annealing_schedule(temp, cooling_rate)
         end
         int_min[it] = best_energy 
+
+        # Display Structure and IR Spectra
+        ml_structure = structure_unitmono(best_state, com0_ml)
+        ipda, isda, ip, is = ir_spectra(νk, best_state, com0_ml, Δν)
+        ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"], title=string("IR-Spectra (domain averaged)", string(it)))
+        combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
+        display(combined_plot)
+
+        all_best_states[it,:] = best_state
     end
-    return best_state, best_energy, del, int_min
+    return best_state, best_energy, del, int_min, all_best_states
 end

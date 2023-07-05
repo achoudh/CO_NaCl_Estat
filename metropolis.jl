@@ -21,8 +21,8 @@ flgs = zeros(Int32, 5*nmols_ml+1)
 # construct a monolayer
 
 # orientation of molecules in a monolayer's unit cell
-θ_uc = zeros(Float64, 4) + [50.0,0.0,0.0,0.0]*degrees
-ϕ_uc = zeros(Float64, 4) + [30.0,0.0,0.0,0.0]*degrees
+θ_uc = zeros(Float64, 4) + [30.0,30.0,30.0,30.0]*degrees
+ϕ_uc = zeros(Float64, 4) + [20.0,60.0,20.0,60.0]*degrees
 # monolayer-surface distance (reduced units)
 z_ml = 3.35e-10/a0_surf
 # get a monolayer molecules' reduced positions and orientation
@@ -76,10 +76,14 @@ println("Initial state:")
 #println(initial_state)
 println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol, trig_uc))
 
+# Display Structure and IR Spectra
 ml_structure = structure_unitmono(initial_state, com0_ml)
-ipda, isda, ip, is = ir_spectra(νk, initial_state, com0_ml)
-display(plot!(ml_structure,νk, [ipda isda], label=["p-pol" "s-pol"],title="IR-Spectra (domain averaged)"))
-stop
+ipda, isda, ip, is = ir_spectra(νk, initial_state, com0_ml, Δν)
+ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],title="IR-Spectra (domain averaged) initial state")
+combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
+display(combined_plot)
+
+
 @time res = simulated_annealing(initial_state, com0_ml,com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
                             0.5, 100000.0, 200, 1, 3)
@@ -89,8 +93,12 @@ println(res[1])
 println(res[2])
 println(res[4])
 
-display_structure_unitmono(res[1], com0_ml)
-
+# Display final Structure and IR Spectra
+ml_structure = structure_unitmono(res[1], com0_ml)
+ipda, isda, ip, is = ir_spectra(νk, res[1], com0_ml, Δν)
+ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],title="IR-Spectra (domain averaged) final state")
+combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
+display(combined_plot)
 # energy(initial_state)
 
 
