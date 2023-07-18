@@ -37,7 +37,7 @@ com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
 ϕ_uc = [-1, 0,-1, 0, 1, 2, 1, 2]*pi/2.0
 trig_uc = (sin.(θ_uc), cos.(θ_uc), sin.(ϕ_uc), cos.(ϕ_uc))
 # overlayer-surface distance (reduced units)
-z_ol = z_ml + 0.5*a0_CO/a0_surf
+z_ol = z_ml + 0.5*a0_CO/a0_surf #+ 10.00*a0_CO/a0_surf
 # get an overlayer molecules' reduced positions and orientation
 com0_ol, phi_ol, theta_ol = overlayer(θ_uc, ϕ_uc, z_ol)
 
@@ -70,7 +70,7 @@ flgs[1 + 0*nmols_ml:1*nmols_ml]   = fill(1, nmols_ml)
 flgs[1 + 1*nmols_ml:2*nmols_ml]   = fill(2, nmols_ml)
 flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(3, 2*nmols_ml)
 flgs[1 + 4*nmols_ml:5*nmols_ml]   = fill(4, nmols_ml) 
-flgs[1 + 5*nmols_ml]              = 4 # adding the overlayer shift
+flgs[1 + 5*nmols_ml]              = 0 # adding the overlayer shift
 
 println("Initial state:")
 #println(initial_state)
@@ -86,7 +86,12 @@ display(combined_plot)
 
 @time res = simulated_annealing(initial_state, com0_ml,com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
-                            0.5, 100000.0, 200, 1, 3)
+                            0.9, 100000.0, 200, 200, 3)
+                            # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
+                            # δq::Vector{Float64}, flgs::Vector{Int32}, 
+                            # cooling_rate::Float64, 
+                            # max_temperature::Float64, n_iterations::Int64 , 
+                            # nstep_thermalization::Int64, n_annealing_cycles::Int64)
 
 display(plot(res[3], color = :black, label = " ", xlabel = "accepted steps", ylabel = "energy/cm-1")) # .- res[3][1]))
 println(res[1])
@@ -101,6 +106,8 @@ combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800
 display(combined_plot)
 # energy(initial_state)
 
+println("The Final ML parameters are")
+show_params(res[1])
 
 # using Profile , ProfileView
 

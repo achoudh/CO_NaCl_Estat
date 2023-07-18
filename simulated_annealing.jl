@@ -8,7 +8,7 @@ function new_coords(x::Vector{Float64}, δq::Vector{Float64}, flgs::Vector{Int32
         x_new = mod(x_new, 2*pi)
         x_new = x_new > pi ?  2*pi - x_new : x_new
     elseif f == 2 # ϕ-type coordinates
-        x_new = mod(x_new, 360.0)
+        x_new = mod(x_new, 2*pi)
     elseif f == 3 # in-plane coordinates
         x_new -= round(x_new)
     end

@@ -22,9 +22,9 @@ degrees::Float64 = pi/180.0
 # CO layer parameters
 nmols_uc::Int64 = 4
 nmols_ucol::Int64 = 8
-nx::Int64 = 2
-ny::Int64 = 2
-nz::Int64 = 2
+nx::Int64 = 1
+ny::Int64 = 1
+nz::Int64 = 1
 
 nmols_ml::Int64 = nmols_uc*nx*ny
 nmols_ol::Int64 = nmols_ucol*nx*ny*nz
@@ -101,7 +101,7 @@ range = 10  # "Wavenumbers"
 dtponts = 5*200
 step = 2 * (range / dtponts)
 νk = collect(ν0[2] - range :step:ν0[1] + range)
-Δν = 1.0 # cm-1 FWHM of the Gaussian convolution
+Δν = 0.3 # cm-1 FWHM of the Gaussian convolution
 
 μ00, μ11, μ01 = -0.112, -0.087, 0.105 # "Debyes"; μ00 and μ11: R.Disselkamp et al., Surface Science 240 (1990) 193-210; for 12C16O. μ01 calculated for 13C18O.
 unit1 = 5034.12*1e-30 # conversion factor from Debye^2/m^3 to wavenumber
@@ -121,4 +121,22 @@ Tp, Ts = [[sqrt(Tx), 0.0, sqrt(Tz)],[0.0, sqrt(Ty), 0.0]]
 ep, es = Tp, Ts;
 
 
+using Printf
+function show_params(x)
+        
+    θ_ml = x[1+0*nmols_ml:1*nmols_ml] /degrees #fill(38.0,4) * pi / 180.0
+    ϕ_ml = x[1+1*nmols_ml:2*nmols_ml] /degrees
+    ml_in = zeros(Float64, nmols_ml, 3)
+    ml_in[:,1] = x[1+2*nmols_ml:3*nmols_ml]
+    ml_in[:,2] = x[1+3*nmols_ml:4*nmols_ml]
+    ml_in[:,3] = x[1+4*nmols_ml:5*nmols_ml] #fill(x[17],4)
+    δz_ol = x[1+5*nmols_ml]
 
+    out = hcat(θ_ml, ϕ_ml, ml_in[:,1].*a0_surf/1e-10, ml_in[:,2].*a0_surf/1e-10, (z_ml.+ml_in[:,3]).*a0_surf/1e-10)
+    
+    @printf("%-10s %-10s %-10s %-10s %-10s\n", "θ/°", "ϕ/°", "δx/Å", "δy/Å", "z/Å")
+    for i in 1:nmols_ml
+    @printf("%f %f  %f  %f  %f\n",out[i,1],out[i,2],out[i,3],out[i,4],out[i,5])
+    end
+    # return out
+end
