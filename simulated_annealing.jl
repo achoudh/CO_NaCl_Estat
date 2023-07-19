@@ -52,7 +52,7 @@ function energy_ol(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol)
                       mol_surf_rep_stone(ml_o, ml_c, 4)
     end
 
- return pot_mlol + pot_olsurf*joule2wn
+ return pot_mlol, pot_olsurf*joule2wn
 end 
 
 # Method to calculate the total energy (intra-monolayer + monolayer-Surface)
@@ -60,24 +60,48 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol)
 
     theta_ml = x[1+0*nmols_ml:1*nmols_ml]
     phi_ml =   x[1+1*nmols_ml:2*nmols_ml]
-    ml_in =    x[1+2*nmols_ml:5*nmols_ml]
-    
-    pot_mlml, pot_mlsurf = Float64(0.0), Float64(0.0)
+    δr_ml =    x[1+2*nmols_ml:5*nmols_ml]
+    δz_ol =    x[ndofs_ml]
+    theta_ol = x[1+ndofs_ml+0*nmols_ol2:ndofs_ml+1*nmols_ol2]
+    phi_ol   = x[1+ndofs_ml+1*nmols_ol2:ndofs_ml+2*nmols_ol2]
+    xy_ol    = x[1+ndofs_ml+2*nmols_ol2:ndofs_ml+4*nmols_ol2]
     
     # intra-monolayer interaction
+
+    pot_mlml = Float64(0.0)
     for i in 1:nmols_ml-1, j in i+1:nmols_ml
-        rvec12 = lattice_ml[i,:] - lattice_ml[j,:] + ml_in[i:nmols_ml:end] - ml_in[j:nmols_ml:end] 
+        rvec12 = lattice_ml[i,:] - lattice_ml[j,:] + δr_ml[i:nmols_ml:end] - δr_ml[j:nmols_ml:end] 
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
         pot_mlml += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], phi_ml[j], theta_ml[j])
     end
 
+    # intra-overlayer interaction
+
+    pot_olol = Float64(0.0)
+    for i in 1:nmols_ol2-1, j in i+1:nmols_ol2
+        rvec12 = lattice_ol[i,:] - lattice_ol[j,:] +[ xy_ol[i:nmols_ol2:end] - xy_ol[j:nmols_ol2:end] ; 0 ]
+        rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
+        rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
+        rvec12 = a0_surf .* rvec12
+        pot_olol += co_co_NNpes(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j])
+    end
+    for i in 1:nmols_ol2, j in 1+nmols_ol2:nmols_ol
+        rvec12 = lattice_ol[i,:] - lattice_ol[j,:] + [xy_ol[i:nmols_ol2:end] ; 0 ]
+        rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
+        rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
+        rvec12 = a0_surf .* rvec12
+        pot_olol += co_co_NNpes(rvec12, phi_ol[i], theta_ol[i], ϕ_ol[j], θ_ol[j])
+    end
+
     # Monolayer-Surface interaction
+
+    pot_mlsurf = Float64(0.0)
     for i in 1:nmols_ml
 
-        stheta, sphi, costheta, cosphi = sin(x[i]), sin(x[i+nmols_ml]), cos(x[i]), cos(x[i+nmols_ml])
-        rvec = [x[i+2*nmols_ml], x[i+3*nmols_ml], x[i+4*nmols_ml] + lattice_ml[i,3]] * a0_surf
+        stheta, sphi, costheta, cosphi = sin(theta_ml[i]), sin(phi_ml[i]), cos(theta_ml[i]), cos(phi_ml[i])
+        rvec = [δr_ml[i], δr_ml[i+nmols_ml], δr_ml[i+2*nmols_ml] + lattice_ml[i,3]] * a0_surf
     
         ml_o  = rvec + [v*stheta*cosphi, v*stheta*sphi, v*costheta]
         ml_c  = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
@@ -87,8 +111,46 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol)
                       mol_surf_rep_stone(ml_o, ml_c, 4)
     end
 
-    
-    return pot_mlml + pot_mlsurf*joule2wn + energy_ol(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, trig_ol) 
+    # Overlayer-Surface interaction
+
+    pot_olsurf = Float64(0.0)
+    for i in 1:nmols_ol2
+
+        rvec = lattice_ol[i,:]
+        rvec[1] -= round(rvec[1])
+        rvec[2] -= round(rvec[2])
+
+        stheta, sphi, costheta, cosphi = sin(theta_ol[i]), sin(phi_ol[i]), cos(theta_ol[i]), cos(phi_ol[i])
+        rvec += [xy_ol[i], xy_ol[i+nmols_ol2], δz_ol] 
+        rvec *= a0_surf
+
+        ol_o  = rvec + [v*stheta*cosphi, v*stheta*sphi, v*costheta]
+        ol_c  = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
+        ol_bc = rvec + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
+        
+        pot_olsurf += mol_surf_attr_stone(ol_o, ol_c, ol_bc, costheta) + 
+                    mol_surf_rep_stone(ol_o, ol_c, 4)
+    end
+
+    # overlayer-monolayer interaction
+
+   pot_mlol = Float64(0.0)
+   for i in 1:nmols_ml, j in 1:nmols_ol2
+        rvec12 = lattice_ml[i,:] - lattice_ol[j,:] + δr_ml[i:nmols_ml:end] - [xy_ol[j], xy_ol[j+nmols_ol2], δz_ol]
+        rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
+        rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
+        rvec12 = a0_surf .* rvec12
+        pot_mlol += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], phi_ol[j], theta_ol[j])
+    end
+    for i in 1:nmols_ml, j in 1+nmols_ol2:nmols_ol
+        rvec12 = lattice_ml[i,:] - lattice_ol[j,:] + δr_ml[i:nmols_ml:end] - [0.0, 0.0, δz_ol]
+        rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
+        rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
+        rvec12 = a0_surf .* rvec12
+        pot_mlol += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], ϕ_ol[j], θ_ol[j])
+    end
+
+    return pot_mlml + pot_olol + (pot_mlsurf + pot_olsurf)*joule2wn + pot_mlol
 end 
 
 # Method to calculate the ith molecule contribution into the energy
@@ -142,7 +204,8 @@ function annealing_schedule(temp::Float64, cooling_rate::Float64)::Float64
     return temp * cooling_rate
 end
 
-function simulated_annealing(initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
+function simulated_annealing(initial_state::Vector{Float64}, lattice_ml, 
+                             lattice_ol, phi_ol, theta_ol, trig_uc,
                                 δq::Vector{Float64}, flgs::Vector{Int32}, 
                                 cooling_rate::Float64, 
                                 max_temperature::Float64, n_iterations::Int64 , 

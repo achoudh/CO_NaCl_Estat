@@ -28,6 +28,8 @@ nz::Int64 = 1
 
 nmols_ml::Int64 = nmols_uc*nx*ny
 nmols_ol::Int64 = nmols_ucol*nx*ny*nz
+ndofs_ml::Int64 = 1 + 5*nmols_ml
+nmols_ol2::Int64 = nmols_ucol*nx*ny # 2 lowest layers of overlayer
 
 
 r_CO::Float64 = 1.14e-10       # CO bondlength in m

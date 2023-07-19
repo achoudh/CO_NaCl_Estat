@@ -39,9 +39,9 @@ function overlayer(θ_uc::Vector{Float64}, ϕ_uc::Vector{Float64}, z::Float64)
                                 [0.0 1.0   a] ]
 
     n = 1
-    for i in 0:nx-1
-        for j in 0:ny-1
-            for k in 0:nz-1
+    for k in 0:nz-1
+        for i in 0:nx-1
+            for j in 0:ny-1
                 com[n:n+nmols_ucol-1,1] .= com_uc[:,1] .+ 2*i
                 com[n:n+nmols_ucol-1,2] .= com_uc[:,2] .+ 2*j
                 com[n:n+nmols_ucol-1,3] .= com_uc[:,3] .+ (2*a*k + z)
