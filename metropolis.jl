@@ -1,6 +1,7 @@
 using Random
 using LinearAlgebra
 using DelimitedFiles
+using Printf
 
 include("constants.jl")
 include("co_co_Guo.jl")
