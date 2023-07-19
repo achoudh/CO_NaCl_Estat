@@ -50,8 +50,8 @@ initial_state[1 + 1*nmols_ml:2*nmols_ml] = phi_ml       # ϕ
 initial_state[1 + 2*nmols_ml:5*nmols_ml] = vec(δr_ml)   # δr
 initial_state[ndofs_ml]                  = 0.0          # overlayer height deviation from c.-of-m.
 # overlayer
-initial_state[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = theta_ol     # θ
-initial_state[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = phi_ol       # ϕ 
+initial_state[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = theta_ol[1:nmols_ol2]    # θ
+initial_state[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
 initial_state[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = vec(δr_ol)   # δr
 
 # Set step sizes
