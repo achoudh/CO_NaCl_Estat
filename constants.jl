@@ -122,23 +122,3 @@ Tp, Ts = [[sqrt(Tx), 0.0, sqrt(Tz)],[0.0, sqrt(Ty), 0.0]]
 
 ep, es = Tp, Ts;
 
-
-using Printf
-function show_params(x)
-        
-    θ_ml = x[1+0*nmols_ml:1*nmols_ml] /degrees #fill(38.0,4) * pi / 180.0
-    ϕ_ml = x[1+1*nmols_ml:2*nmols_ml] /degrees
-    ml_in = zeros(Float64, nmols_ml, 3)
-    ml_in[:,1] = x[1+2*nmols_ml:3*nmols_ml]
-    ml_in[:,2] = x[1+3*nmols_ml:4*nmols_ml]
-    ml_in[:,3] = x[1+4*nmols_ml:5*nmols_ml] #fill(x[17],4)
-    δz_ol = x[1+5*nmols_ml]
-
-    out = hcat(θ_ml, ϕ_ml, ml_in[:,1].*a0_surf/1e-10, ml_in[:,2].*a0_surf/1e-10, (z_ml.+ml_in[:,3]).*a0_surf/1e-10)
-    
-    @printf("%-10s %-10s %-10s %-10s %-10s\n", "θ/°", "ϕ/°", "δx/Å", "δy/Å", "z/Å")
-    for i in 1:nmols_ml
-    @printf("%f %f  %f  %f  %f\n",out[i,1],out[i,2],out[i,3],out[i,4],out[i,5])
-    end
-    # return out
-end

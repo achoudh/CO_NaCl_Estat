@@ -87,10 +87,10 @@ flgs[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = fill(3, 2*nmols_ol2)
 
 println("Initial state:")
 #println(initial_state)
-println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol, trig_uc))
-arnab
+println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol))
+
 # Display Structure and IR Spectra
-ml_structure = structure_unitmono(initial_state, com0_ml)
+ml_structure = structure_unitmono(initial_state, com0_ml, com0_ol)
 ipda, isda, ip, is = ir_spectra(νk, initial_state, com0_ml, Δν)
 ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequnecy/cm-1",title="IR-Spectra (domain averaged) initial state")
 combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
@@ -112,7 +112,7 @@ println(res[2])
 println(res[4])
 
 # Display final Structure and IR Spectra
-ml_structure = structure_unitmono(res[1], com0_ml)
+ml_structure = structure_unitmono(res[1], com0_ml, com0_ol)
 ipda, isda, ip, is = ir_spectra(νk, res[1], com0_ml, Δν)
 ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequnecy/cm-1",title="IR-Spectra (domain averaged) final state")
 combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
