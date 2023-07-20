@@ -22,9 +22,9 @@ degrees::Float64 = pi/180.0
 # CO layer parameters
 nmols_uc::Int64 = 4
 nmols_ucol::Int64 = 8
-nx::Int64 = 1
-ny::Int64 = 1
-nz::Int64 = 1
+nx::Int64 = 2
+ny::Int64 = 2
+nz::Int64 = 2
 
 nmols_ml::Int64 = nmols_uc*nx*ny
 nmols_ol::Int64 = nmols_ucol*nx*ny*nz

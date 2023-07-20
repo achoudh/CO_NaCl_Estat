@@ -95,7 +95,7 @@ ipda, isda, ip, is = ir_spectra(νk, initial_state, com0_ml, Δν)
 ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequnecy/cm-1",title="IR-Spectra (domain averaged) initial state")
 combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
 display(combined_plot)
-
+arnab
 
 @time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
