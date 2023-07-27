@@ -36,10 +36,12 @@ r_CO::Float64 = 1.14e-10       # CO bondlength in m
 a0_CO::Float64 = 5.64e-10      # CO layer lattice constant, m
 a0_NaCl::Float64 = 5.64e-10    # NaCl lattice constant, m
 a0_surf::Float64 = 3.99e-10    # NaCl surface lattice constant
+
 # NaCl lattice vectors
 b1::Vector{Float64} = [0,1,0]*a0_surf
 b2::Vector{Float64} = [1,0,0]*a0_surf
 b3::Vector{Float64} = [0,0,1]*a0_NaCl
+
 # Na and Cl positions for the 1st and 2nd layers
 nl_surf = 2
 pos_surf::Vector{Matrix{Float64}} = [ [[0.0, 0.0, 0.0] [-0.5*a0_surf, -0.5*a0_surf, 0.0]],
@@ -53,7 +55,12 @@ bc::Float64 = 0.0817e-10 # bond center
 
 rot::Matrix{Float64} = [cos(pi/4) sin(pi/4) 0.0; -sin(pi/4) cos(pi/4) 0.0; 0.0 0.0 1.0]
 
-# CO-CO NN-PES data
+
+
+###########################
+# CO-CO NN-PES parameters #
+###########################
+
 # Dimensions of arrays for NN-PES
 s0_nn = 7
 s1_nn = 45
@@ -68,7 +75,9 @@ rg_nn::Matrix{Float64} = transpose(readdlm("rg.txt"))
 vg_nn::Vector{Float64} = [-702.59000000000003, 22446.305300000000]
 b3_nn::Float64 = 2.6335296521641700
 
-
+##########################################
+# Molecule Surface interaction constants #
+##########################################
 
 # Arrays of all odd integer combination (l,m) up to |l|,|m|<3
 nlm::Int64 = 12
@@ -95,7 +104,31 @@ K_stone::Float64 = 4.3597482e-21
 # [ [C-Na, O-Na], [C-Cl, O-Cl] ]
 disp_coef::Matrix{Float64} = [ [383.3 256.6]; [3935.9 2633.0] ]/6.02214076*1e-80 
 
-# Exciton parameters
+#########################################
+# CO-CO dispersion-repulsion parameters #
+#########################################
+
+#repulsion parameters
+eps_oo = 51.8037 *boltzmann # (J)
+eps_cc = 31.5550 *boltzmann # (J)
+# eps_co = 40.431 *boltzmann  # (J)
+sig_oo = 3.0058e-10  # (m)
+sig_cc = 3.56379e-10 # (m)
+# sig_co = 3.2848e-10  # (m)
+
+a_rep_oo   = 4.0*eps_oo*sig_oo^12
+a_rep_d_oo = 4.0*eps_oo*sig_oo^6
+
+a_rep_cc   = 4.0*eps_cc*sig_cc^12
+a_rep_d_cc = 4.0*eps_cc*sig_cc^6
+
+a_rep_co   =
+a_rep_d_co =
+
+
+######################
+# Exciton parameters #
+######################
 
 ν0 = [2050.82, 2036.1]
 # Data to built up the wavenumber array
