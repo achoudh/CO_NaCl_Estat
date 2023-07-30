@@ -35,7 +35,7 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_mlml += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], phi_ml[j], theta_ml[j])
+        pot_mlml += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], phi_ml[j], theta_ml[j])
     end
 
     # intra-overlayer interaction
@@ -46,16 +46,17 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_olol += co_co_NNpes(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j])
-        println(i,"\t", j,"\t",rvec12./1e-10,"\t \t", norm(rvec12)/1e-10,"\t \t", co_co_NNpes(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j]))
+        pot_olol += co_co_interaction(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j])
+        println(i,"\t", j,"\t", norm(rvec12)/1e-10,"\t \t", co_co_interaction(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j]))
     end
+    println(pot_olol)
     for i in 1:nmols_ol2, j in 1+nmols_ol2:nmols_ol
         rvec12 = lattice_ol[i,:] - lattice_ol[j,:] + [xy_ol[i:nmols_ol2:end] ; 0 ]
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
         # println(rvec12)
-        pot_olol += co_co_NNpes(rvec12, phi_ol[i], theta_ol[i], ϕ_ol[j], θ_ol[j])
+        pot_olol += co_co_interaction(rvec12, phi_ol[i], theta_ol[i], ϕ_ol[j], θ_ol[j])
     end
 
     # Monolayer-Surface interaction
@@ -103,14 +104,14 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_mlol += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], phi_ol[j], theta_ol[j])
+        pot_mlol += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], phi_ol[j], theta_ol[j])
     end
     for i in 1:nmols_ml, j in 1+nmols_ol2:nmols_ol
         rvec12 = lattice_ml[i,:] - lattice_ol[j,:] + δr_ml[i:nmols_ml:end] - [0.0, 0.0, δz_ol]
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_mlol += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], ϕ_ol[j], θ_ol[j])
+        pot_mlol += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], ϕ_ol[j], θ_ol[j])
     end
 
     return pot_mlml + pot_olol + (pot_mlsurf + pot_olsurf)*joule2wn + pot_mlol
@@ -137,7 +138,7 @@ function energy_ml_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i)
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_mlml += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], phi_ml[j], theta_ml[j])
+        pot_mlml += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], phi_ml[j], theta_ml[j])
     end
 
     # Monolayer-Surface interaction for imol
@@ -162,14 +163,14 @@ function energy_ml_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i)
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_mlol += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], phi_ol[j], theta_ol[j])
+        pot_mlol += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], phi_ol[j], theta_ol[j])
     end
     for j in 1+nmols_ol2:nmols_ol
         rvec12 = lattice_ml[i,:] - lattice_ol[j,:] + δr_ml[i:nmols_ml:end] - [0.0, 0.0, δz_ol]
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_mlol += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], ϕ_ol[j], θ_ol[j])
+        pot_mlol += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], ϕ_ol[j], θ_ol[j])
     end
 
 
@@ -198,8 +199,8 @@ function energy_ol_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i)
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_olol += co_co_NNpes(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j])
-    #    println(i,"\t", j,"\t", norm(rvec12/1e-10),"\t \t", co_co_NNpes(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j]))
+        pot_olol += co_co_interaction(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j])
+    #    println(i,"\t", j,"\t", norm(rvec12/1e-10),"\t \t", co_co_interaction(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j]))
     end
     for j in 1+nmols_ol2:nmols_ol
         rvec12 = lattice_ol[i,:] - lattice_ol[j,:] + [xy_ol[i:nmols_ol2:end] ; 0 ]
@@ -207,7 +208,7 @@ function energy_ol_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i)
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
         println(rvec12)
-        pot_olol += co_co_NNpes(rvec12, phi_ol[i], theta_ol[i], ϕ_ol[j], θ_ol[j])
+        pot_olol += co_co_interaction(rvec12, phi_ol[i], theta_ol[i], ϕ_ol[j], θ_ol[j])
     end
 
     # Overlayer-Surface interaction
@@ -234,7 +235,7 @@ function energy_ol_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i)
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_mlol += co_co_NNpes(rvec12, phi_ml[j], theta_ml[j], phi_ol[i], theta_ol[i])
+        pot_mlol += co_co_interaction(rvec12, phi_ml[j], theta_ml[j], phi_ol[i], theta_ol[i])
     end
 
     return pot_olol + pot_olsurf*joule2wn + pot_mlol
@@ -280,14 +281,14 @@ function energy_ol_δz(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_mlol += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], phi_ol[j], theta_ol[j])
+        pot_mlol += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], phi_ol[j], theta_ol[j])
     end
     for i in 1:nmols_ml, j in 1+nmols_ol2:nmols_ol
         rvec12 = lattice_ml[i,:] - lattice_ol[j,:] + δr_ml[i:nmols_ml:end] - [0.0, 0.0, δz_ol]
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        pot_mlol += co_co_NNpes(rvec12, phi_ml[i], theta_ml[i], ϕ_ol[j], θ_ol[j])
+        pot_mlol += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], ϕ_ol[j], θ_ol[j])
     end
 
 

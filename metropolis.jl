@@ -3,15 +3,26 @@ using LinearAlgebra
 using DelimitedFiles
 using Printf
 
+#########################
+# Pre-defined functions #
+#########################
+
 include("constants.jl")
-include("co_co_Guo.jl")
 include("lattice_construction.jl")
 include("visualization.jl")
+
+## Turn on the interaction needed ##
 include("site_surface_interaction.jl")
+# include("co_co_Guo.jl")
+include("co_co_interactions.jl") 
+
 include("simulated_annealing.jl")
 include("ir_spectra.jl")
 
-# Initialization
+##################
+# Initialization #
+##################
+
 Random.seed!(1234);
 
 # construct a monolayer
@@ -38,6 +49,10 @@ z_ol = z_ml + 0.5*a0_CO/a0_surf #+ 10.00*a0_CO/a0_surf
 com0_ol, phi_ol, theta_ol = overlayer(θ_uc, ϕ_uc, z_ol)
 # deviation vectors of molecular positions (r = com0 + δr)
 δr_ol = zeros(Float64,nmols_ol2,2)
+
+###########################################
+# step vector, flags and initial geometry #
+###########################################
 
 # step vector, and flags defining frozen DoFs
 δq = zeros(Float64, 5*nmols_ml+1+4*nmols_ol2)
@@ -96,6 +111,12 @@ ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequnecy/
 combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
 display(combined_plot)
 arnab
+
+
+##################
+# Run simulation #
+##################
+
 
 @time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
