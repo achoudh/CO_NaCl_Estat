@@ -39,7 +39,7 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
     end
 
     # intra-overlayer interaction
-    println("mol. 1","\t", "mol. 2","\t", "Distance/Å","\t \t", "Energy/cm-1")
+    # println("mol. 1","\t", "mol. 2","\t", "Distance/Å","\t \t", "Energy/cm-1")
     pot_olol = Float64(0.0)
     for i in 1:nmols_ol2-1, j in i+1:nmols_ol2
         rvec12 = lattice_ol[i,:] - lattice_ol[j,:] +[ xy_ol[i:nmols_ol2:end] - xy_ol[j:nmols_ol2:end] ; 0 ]
@@ -47,9 +47,9 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
         pot_olol += co_co_interaction(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j])
-        println(i,"\t", j,"\t", norm(rvec12)/1e-10,"\t \t", co_co_interaction(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j]))
+        # println(i,"\t", j,"\t", norm(rvec12)/1e-10,"\t \t", co_co_interaction(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j]))
     end
-    println(pot_olol)
+    # println(pot_olol)
     for i in 1:nmols_ol2, j in 1+nmols_ol2:nmols_ol
         rvec12 = lattice_ol[i,:] - lattice_ol[j,:] + [xy_ol[i:nmols_ol2:end] ; 0 ]
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
@@ -207,7 +207,7 @@ function energy_ol_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i)
         rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
         rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
         rvec12 = a0_surf .* rvec12
-        println(rvec12)
+        # println(rvec12)
         pot_olol += co_co_interaction(rvec12, phi_ol[i], theta_ol[i], ϕ_ol[j], θ_ol[j])
     end
 

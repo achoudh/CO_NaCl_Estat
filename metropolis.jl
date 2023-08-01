@@ -28,8 +28,8 @@ Random.seed!(1234);
 # construct a monolayer
 
 # orientation of molecules in a monolayer's unit cell
-θ_uc = zeros(Float64, 4) + [30.0,30.0,30.0,30.0]*degrees
-ϕ_uc = zeros(Float64, 4) + [20.0,60.0,20.0,60.0]*degrees
+θ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees #[30.0,30.0,30.0,30.0]
+ϕ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees #[20.0,60.0,20.0,60.0]
 # monolayer-surface distance (reduced units)
 z_ml = 3.35e-10/a0_surf
 # get a monolayer molecules' reduced positions and orientation
@@ -40,11 +40,11 @@ com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
 # construct an overlayer
 
 # orientation of molecules in an overlayer's unit cell
-θ_uc = [ 3, 1, 3, 1, 3, 1, 3, 1]*pi/4.0
-ϕ_uc = [-1, 0,-1, 0, 1, 2, 1, 2]*pi/2.0
+θ_uc = [ 3, 1, 3, 1, 1, 3, 1, 3]*pi/4.0  # The old structure [ 3, 1, 3, 1, 3, 1, 3, 1]*pi/4.0 is not correct
+ϕ_uc = [-1, 0,-1, 0, 1, 2, 1, 2]*pi/2.0 
 trig_uc = (sin.(θ_uc), cos.(θ_uc), sin.(ϕ_uc), cos.(ϕ_uc))
 # overlayer-surface distance (reduced units)
-z_ol = z_ml + 0.5*a0_CO/a0_surf #+ 10.00*a0_CO/a0_surf
+z_ol = z_ml + 10.5*a0_CO/a0_surf #+ 10.00*a0_CO/a0_surf
 # get an overlayer molecules' reduced positions and orientation
 com0_ol, phi_ol, theta_ol = overlayer(θ_uc, ϕ_uc, z_ol)
 # deviation vectors of molecular positions (r = com0 + δr)
@@ -95,10 +95,10 @@ flgs[1 + 0*nmols_ml:1*nmols_ml]   = fill(1, nmols_ml)
 flgs[1 + 1*nmols_ml:2*nmols_ml]   = fill(2, nmols_ml)
 flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(3, 2*nmols_ml)
 flgs[1 + 4*nmols_ml:5*nmols_ml]   = fill(4, nmols_ml) 
-flgs[ndofs_ml]                    = 4 # adding the overlayer shift
-flgs[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = fill(1, nmols_ol2)
-flgs[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = fill(2, nmols_ol2)
-flgs[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = fill(3, 2*nmols_ol2)
+flgs[ndofs_ml]                    = 0 # adding the overlayer shift
+flgs[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = fill(0, nmols_ol2)
+flgs[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = fill(0, nmols_ol2)
+flgs[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = fill(0, 2*nmols_ol2)
 
 println("Initial state:")
 #println(initial_state)
@@ -110,7 +110,7 @@ ipda, isda, ip, is = ir_spectra(νk, initial_state, com0_ml, Δν)
 ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequnecy/cm-1",title="IR-Spectra (domain averaged) initial state")
 combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
 display(combined_plot)
-arnab
+# arnab
 
 
 ##################
@@ -120,7 +120,7 @@ arnab
 
 @time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
-                            0.5, 100000.0, 200, 1, 3)
+                            0.4, 100000.0, 400, 1, 3)
                             # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
                             # δq::Vector{Float64}, flgs::Vector{Int32}, 
                             # cooling_rate::Float64, 
@@ -128,7 +128,7 @@ arnab
                             # nstep_thermalization::Int64, n_annealing_cycles::Int64)
 
 display(plot(res[3], color = :black, label = " ", xlabel = "accepted steps", ylabel = "energy/cm-1")) # .- res[3][1]))
-println(res[1])
+# println(res[1])
 println(res[2])
 println(res[4])
 

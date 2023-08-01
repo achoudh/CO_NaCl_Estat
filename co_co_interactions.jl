@@ -50,12 +50,6 @@ a36::Float64 = -0.108525
 a37::Float64 =  0.00450608
 
 
-###############################
-# Determine multipole moments #
-###############################
-
-CO_mom = multipole_R_dependence(v+w)
-
 #############
 # functions #
 #############
@@ -88,6 +82,12 @@ function multipole_R_dependence(R::Float64)#, charge::Float64, dipole::Float64, 
     
     return charge, dipole, quadrupole, octapole
 end
+
+###############################
+# Determine multipole moments #
+###############################
+
+CO_mom = multipole_R_dependence(v+w)
 
 function co_co_interaction(R12::Vector{Float64}, phi1::Float64, theta1::Float64, phi2::Float64, theta2::Float64)
 
