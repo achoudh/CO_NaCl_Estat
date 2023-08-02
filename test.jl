@@ -1,8 +1,5 @@
-function test(values)
-    val = copy(values)
-    val[1] = 0
-end
+###############################
+# Now testing CO-CO potential #
+###############################
 
-values = [1,2]
-@time test(values)
-println(values)
+
