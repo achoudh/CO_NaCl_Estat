@@ -28,7 +28,7 @@ for i in 0:0.1:1.5
     out_rep_disp = mol_surf_rep_stone(ml_o, ml_c, 4)
     # push!(en, [out_attr, out_disp, out_rep] .* joule2wn)
     
-    push!(en, [out_attr,  out_attr2, out_attr  out_rep_disp ] .* joule2wn)
+    push!(en, [out_attr,  out_attr2, out_attr+  out_rep_disp ] .* joule2wn)
 end
 
 en = hcat(en...)

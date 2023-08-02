@@ -86,3 +86,14 @@ function show_params(x)
     end
     # return out
 end
+
+function write_to_file(file_path, data)
+        # Step 1: Open the file in write mode
+        file = open(file_path, "w")
+        for f in data
+            println(file, f)
+        end
+        
+        close(file)
+        
+end

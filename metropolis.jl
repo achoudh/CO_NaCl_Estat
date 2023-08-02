@@ -119,7 +119,7 @@ display(combined_plot)
 
 @time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
-                            0.4, 1000000.0, 400, 1, 100)
+                            0.4, 1000000.0, 400, 1, 2)
                             # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
                             # δq::Vector{Float64}, flgs::Vector{Int32}, 
                             # cooling_rate::Float64, 
@@ -148,16 +148,5 @@ show_params(res[1])
 
 
 # ProfileView.view()
-
-function write_to_file(file_path, data)
-# Step 1: Open the file in write mode
-file = open(file_path, "w")
-for f in data
-    println(file, f)
-end
-
-close(file)
-
-end
 
 write_to_file("buried_ov_fixed_dof.txt", res)
