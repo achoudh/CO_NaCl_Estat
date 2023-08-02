@@ -26,6 +26,8 @@ Random.seed!(1234);
 
 # construct a monolayer
 
+random_start = 
+
 # orientation of molecules in a monolayer's unit cell
 θ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees #[30.0,30.0,30.0,30.0]
 ϕ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees #[20.0,60.0,20.0,60.0]
@@ -119,7 +121,7 @@ display(combined_plot)
 
 @time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
-                            0.4, 1000000.0, 400, 1, 2)
+                            0.4, 1000000.0, 100, 1, 2)
                             # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
                             # δq::Vector{Float64}, flgs::Vector{Int32}, 
                             # cooling_rate::Float64, 
@@ -135,8 +137,13 @@ println(res[4])
 ml_structure = structure_unitmono(res[1], com0_ml, com0_ol)
 ipda, isda, ip, is = ir_spectra(νk, res[1], com0_ml, Δν)
 ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequnecy/cm-1",title="IR-Spectra (domain averaged) final state")
-combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
+ml_structure1 = scatter3d(ml_structure, camera=(10,20,), label = nothing, zlims =(0,7))
+combined_plot1 = plot(ml_structure,ml_structure1,layout=(1,2))
+combined_plot = plot(ml_spectra, combined_plot1, layout=(2,1), size = (800, 800))
+
 display(combined_plot)
+
+savefig(combined_plot, "test.png")
 # energy(initial_state)
 
 println("The Final ML parameters are")
@@ -149,4 +156,6 @@ show_params(res[1])
 
 # ProfileView.view()
 
-write_to_file("buried_ov_fixed_dof.txt", res)
+# write_to_file("buried_ov_fixed_dof.txt", res)
+
+Plots.histogram(res[4])

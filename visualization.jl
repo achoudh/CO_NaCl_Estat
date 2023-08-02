@@ -1,6 +1,8 @@
 using Plots
+# using PlotlySave
+# import PlotlySave.savefig
 gr()
-plotly()
+# plotly()
 
 # Set default plot attributes
 default(titlefontsize=20, labelfontsize=16, linewidth=2, legendfontsize=14, 
@@ -14,8 +16,8 @@ function nacl_show(r_Cl,r_Na)
         posna = hcat([[i, j, 0] for i in 0:ll for j in 0:mm]...)
         poscl = hcat([[i+0.5, j+0.5, 0] for i in 0:ll-1 for j in 0:mm-1]...)
 
-        surface = scatter3d(posna[1,:], posna[2,:], posna[3,:], ms = r_Na, c=:gray, label = "Na")
-                 scatter3d!(poscl[1,:], poscl[2,:], poscl[3,:], ms = r_Cl, c=:green,  label = "Cl", alpha=0.8)
+        surface = scatter3d(posna[1,:], posna[2,:], posna[3,:], ms = r_Na, c=:gray, label = nothing)
+                 scatter3d!(poscl[1,:], poscl[2,:], poscl[3,:], ms = r_Cl, c=:green,  label = nothing, alpha=0.8)
         return surface
 end
 
@@ -55,11 +57,11 @@ function structure_unitmono(x, lattice_ml, lattice_ol)
 
         end
         
-        co_nacl = nacl_show(20, 10)
-        scatter3d!(co_nacl,ml_c[:,1],ml_c[:,2],ml_c[:,3],ms=9,c=:black,camera=(0,90,),label="C")
-        scatter3d!(co_nacl,ml_o[:,1],ml_o[:,2],ml_o[:,3],ms=8,c=:red, ticks=nothing, label = "O")
-        scatter3d!(co_nacl,ol_c[:,1],ol_c[:,2],ol_c[:,3],ms=9,c=:black,camera=(0,90,),label="C",alpha = 0.3)
-        scatter3d!(co_nacl,ol_o[:,1],ol_o[:,2],ol_o[:,3],ms=8,c=:red, ticks=nothing, label = "O",alpha = 0.3)
+        co_nacl = nacl_show(14, 9)
+        scatter3d!(co_nacl,ml_c[:,1],ml_c[:,2],ml_c[:,3],ms=9,c=:black,camera=(0,90,), label = nothing)
+        scatter3d!(co_nacl,ml_o[:,1],ml_o[:,2],ml_o[:,3],ms=8,c=:red, ticks=nothing, label = nothing)
+        scatter3d!(co_nacl,ol_c[:,1],ol_c[:,2],ol_c[:,3],ms=9,c=:black,camera=(0,90,),alpha = 0.2, label = nothing)
+        scatter3d!(co_nacl,ol_o[:,1],ol_o[:,2],ol_o[:,3],ms=8,c=:red, ticks=nothing, alpha = 0.2, label = nothing)
         # zlims!(co_nacl,0,10)
 
 return co_nacl
