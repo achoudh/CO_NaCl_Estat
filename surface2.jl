@@ -1,53 +1,58 @@
 include("constants.jl")
 include("site_surface_attraction.jl")
 include("site_surface_interaction.jl")
-# include("site_surface_interaction.jl")
+include("visualization.jl")
 
 using LaTeXStrings
 using Plots
 gr()
 
 
+mol_sur_contribution = []
 
-en = []
-for i in 0:0.1:1.5
-    theta = 180.0 * degrees
-    phi = 0.0 * degrees
-    ml_in = zeros(Float64,3)
+for θ in [0.0 180.0]
+    en = []
+    theta = θ * degrees
+    for i in 0:0.05:1.5
+        phi   = 0.0 * degrees
+        ml_in = zeros(Float64,3)
+        
+        ml_in .*= a0_surf
+        ml_in[3] = (2.9 + i)*1e-10
+        stheta, sphi, costheta, cosphi = sin(theta), sin(phi), cos(theta), cos(phi)
+        
+        ml_o  = ml_in + [v*stheta*cosphi, v*stheta*sphi, v*costheta]
+        ml_c  = ml_in + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
+        ml_bc = ml_in + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
+        
+        out_attr     = mol_surf_attr_stone(ml_o, ml_c, ml_bc, costheta)
+        out_attr2    = mol_surf_attr_arnab(ml_in,  costheta)
+        out_rep, disp = mol_surf_rep_stone(ml_o, ml_c, 4)
+        # push!(en, [out_attr, out_disp, out_rep] .* joule2wn)
     
-    ml_in .*= a0_surf
-    ml_in[3] = (2.9 + i)*1e-10
-    stheta, sphi, costheta, cosphi = sin(theta), sin(phi), cos(theta), cos(phi)
-    
-    ml_o = ml_in + [v*stheta*cosphi, v*stheta*sphi, v*costheta]
-    ml_c = ml_in + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
-    ml_bc = ml_in + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
-    
-    out_attr = mol_surf_attr_stone(ml_o, ml_c, ml_bc, costheta)
-    out_attr2 = mol_surf_attr_arnab(ml_in,  costheta)
-    out_rep_disp = mol_surf_rep_stone(ml_o, ml_c, 4)
-    # push!(en, [out_attr, out_disp, out_rep] .* joule2wn)
-    
-    push!(en, [out_attr,  out_attr2, out_attr+  out_rep_disp ] .* joule2wn)
+        push!(en, [out_attr2, out_attr, out_rep, disp ] .* joule2wn)
+    end
+
+    en = hcat(en...)
+    xval = 2.9 .+ collect(0:0.05:1.5)
+ 
+    ti = "θ=" * string(θ) * "°"
+    p_plot = plot(xval, en[4,:], ls=:dot, c=:black, label = "Single point attraction", xlabel = "z/Å",
+    ylabel = L"energy/cm$^{-1}$",legend=:bottomright, title = ti)
+    plot!(p_plot, xval, en[2,:], ls=:dashdot, c=:black, label = "Triple point attraction (Stone)")
+    plot!(p_plot, xval, en[3,:], ls =:dash, c=:black, label = "Total (Stone)")
+    # plot!(p_plot, xval, en[4,:], c=:black, label = "Total (Stone)")
+    display(p_plot)
+
+    push!(mol_sur_contribution,en)
 end
 
-en = hcat(en...)
-xval = 2.9 .+ collect(0:0.1:1.5)
+file = "C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/mol_sur_contribution.txt"
 
-# plotly()
-# # Set default plot attributes
-# default(titlefontsize=20, linewidth=3, legendfontsize=10, 
-#         guidefont=font(16), tickfont=font(14), thickness_scaling=1.25, frame=:box, size = (1200, 800))
-# # plot(xval, (en[1,:] - en[2,:] + en[3,:]), xlabel = "z/Å", ylabel = "energy/cm-1", marker=:circle, 
-# #         ls=:solid, c=:black, fmt=:png, label = "total", legend=:bottomright, title = "θ=0°")
-p_plot = plot(xval, en[1,:], ls=:dot, c=:black, label = "attraction", xlabel = "z/Å", 
-    ylabel = L"energy/cm$^{-1}$",legend=:bottomright, title = "θ=180°")
-plot!(p_plot, xval, en[2,:], ls=:dashdot, c=:black, label = "repulsion")
-plot!(p_plot, xval, en[3,:], ls =:dash, c=:black, label = "dispersion")
-#default()
-# plot!(xval, (en[1,:] - en[2,:] + en[3,:]), marker=:circle, 
-# ls=:solid, c=:black, label = "total",legend=:topright, inset = (1, bbox(0.02, 0.02, 0.5, 0.5, :top, :right)), subplot = 2)
-display(p_plot)
+angles = [["0", "180"], []]
+push!(mol_sur_contribution, [xval])
+write_to_file(file, mol_sur_contribution)
+
 arnab 
 
 
