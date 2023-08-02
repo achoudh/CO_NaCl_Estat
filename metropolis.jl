@@ -1,6 +1,5 @@
 using Random
 using LinearAlgebra
-using DelimitedFiles
 using Printf
 
 #########################
@@ -13,8 +12,8 @@ include("visualization.jl")
 
 ## Turn on the interaction needed ##
 include("site_surface_interaction.jl")
-# include("co_co_Guo.jl")
-include("co_co_interactions.jl") 
+include("co_co_Guo.jl")
+# include("co_co_interactions.jl") 
 
 include("simulated_annealing.jl")
 include("ir_spectra.jl")
@@ -44,7 +43,7 @@ com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
 ϕ_uc = [-1, 0,-1, 0, 1, 2, 1, 2]*pi/2.0 
 trig_uc = (sin.(θ_uc), cos.(θ_uc), sin.(ϕ_uc), cos.(ϕ_uc))
 # overlayer-surface distance (reduced units)
-z_ol = z_ml + 10.5*a0_CO/a0_surf #+ 10.00*a0_CO/a0_surf
+z_ol = z_ml + 0.5*a0_CO/a0_surf #+ 10.00*a0_CO/a0_surf
 # get an overlayer molecules' reduced positions and orientation
 com0_ol, phi_ol, theta_ol = overlayer(θ_uc, ϕ_uc, z_ol)
 # deviation vectors of molecular positions (r = com0 + δr)
@@ -95,7 +94,7 @@ flgs[1 + 0*nmols_ml:1*nmols_ml]   = fill(1, nmols_ml)
 flgs[1 + 1*nmols_ml:2*nmols_ml]   = fill(2, nmols_ml)
 flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(3, 2*nmols_ml)
 flgs[1 + 4*nmols_ml:5*nmols_ml]   = fill(4, nmols_ml) 
-flgs[ndofs_ml]                    = 0 # adding the overlayer shift
+flgs[ndofs_ml]                    = 4 # adding the overlayer shift
 flgs[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = fill(0, nmols_ol2)
 flgs[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = fill(0, nmols_ol2)
 flgs[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = fill(0, 2*nmols_ol2)
@@ -120,7 +119,7 @@ display(combined_plot)
 
 @time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
-                            0.4, 100000.0, 400, 1, 3)
+                            0.4, 1000000.0, 400, 1, 100)
                             # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
                             # δq::Vector{Float64}, flgs::Vector{Int32}, 
                             # cooling_rate::Float64, 
@@ -149,3 +148,16 @@ show_params(res[1])
 
 
 # ProfileView.view()
+
+function write_to_file(file_path, data)
+# Step 1: Open the file in write mode
+file = open(file_path, "w")
+for f in data
+    println(file, f)
+end
+
+close(file)
+
+end
+
+write_to_file("buried_ov_fixed_dof.txt", res)

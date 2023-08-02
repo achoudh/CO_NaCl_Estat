@@ -89,7 +89,8 @@ end
 
 CO_mom = multipole_R_dependence(v+w)
 
-function co_co_interaction(R12::Vector{Float64}, phi1::Float64, theta1::Float64, phi2::Float64, theta2::Float64)
+function co_co_interaction(R12::Vector{Float64}, phi1::Float64, theta1::Float64, phi2::Float64, theta2::Float64,
+                            rep_on::Int64=1, disp_on::Int64=1)
 
     # Determines the electrostatic interaction energy between two CO molecules
     # using electrostatic interaction, dispersion and repulsion
@@ -194,7 +195,7 @@ function co_co_interaction(R12::Vector{Float64}, phi1::Float64, theta1::Float64,
 
     V_CO_CO::Float64 = Vqq + Vqmu + Vmumu + VmuQu + VmuO + VQuQu + VQuO + VOO
 
-    V_CO_CO += V_rep - V_disp
+    V_CO_CO += rep_on*V_rep - disp_on*V_disp
 
     return V_CO_CO * joule2wn #Vqq, Vqmu, Vmumu, VmuQu, VmuO, VQuQu, VQuO, VOO,
 end
