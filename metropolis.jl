@@ -114,9 +114,24 @@ display(combined_plot)
 # arnab
 
 
-##################
-# Run simulation #
-##################
+#######################################################
+# Run simulation with randomly modified initial_state #
+#######################################################
+# Set step sizes
+δθ = 10.0*degrees
+δϕ = 10.0*degrees
+δxy = 0.05      # surface lattice units
+δz = 0.1        # surface lattice units
+δz_ol = 0.1     # surface lattice units
+
+
+for i in 1:3
+    modified_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
+    for (q, i) in enumerate(initial_state)
+        modified_state[i] = new_coords(q, de)
+    end
+
+end 
 
 
 @time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
@@ -136,13 +151,14 @@ println(res[4])
 # Display final Structure and IR Spectra
 ml_structure = structure_unitmono(res[1], com0_ml, com0_ol)
 ipda, isda, ip, is = ir_spectra(νk, res[1], com0_ml, Δν)
-ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequnecy/cm-1",title="IR-Spectra (domain averaged) final state")
-ml_structure1 = scatter3d(ml_structure, camera=(10,20,), label = nothing, zlims =(0,7))
-combined_plot1 = plot(ml_structure,ml_structure1,layout=(1,2))
-combined_plot = plot(ml_spectra, combined_plot1, layout=(2,1), size = (800, 800))
+ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequency/cm-1",title="IR-Spectra (domain averaged) final state", frame=:box)
+ml_structure1 = scatter3d(ml_structure, camera=(10,20,), label = nothing, ticks=nothing, axes=nothing,zlims =(0,7))
+combined_plot1 = scatter3d!(ml_structure,ml_structure1,layout=(1,2))
+combined_plot = plot(ml_spectra, combined_plot1, layout=(2,1), size = (700, 400), dpi = 1200)
 
 display(combined_plot)
 
+savefig(combined_plot, "test.pdf")
 savefig(combined_plot, "test.png")
 # energy(initial_state)
 

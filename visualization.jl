@@ -1,12 +1,12 @@
 using Plots
-# using PlotlySave
-# import PlotlySave.savefig
-gr()
-# plotly()
+#gr()
+plotlyjs()
 
 # Set default plot attributes
-default(titlefontsize=20, labelfontsize=16, linewidth=2, legendfontsize=14, 
-        guidefont=font(16), tickfont=font(14), thickness_scaling=1.15, frame=:box, size = (900, 600))
+default(titlefontsize=12, labelfontsize=10, linewidth=2, legendfontsize=8, 
+        guidefont=font(10), tickfont=font(10), thickness_scaling=1.15, size = (700, 400)) #, frame=:box
+
+size_reduce = 0.2
 
 function nacl_show(r_Cl,r_Na)
 
@@ -17,7 +17,7 @@ function nacl_show(r_Cl,r_Na)
         poscl = hcat([[i+0.5, j+0.5, 0] for i in 0:ll-1 for j in 0:mm-1]...)
 
         surface = scatter3d(posna[1,:], posna[2,:], posna[3,:], ms = r_Na, c=:gray, label = nothing)
-                 scatter3d!(poscl[1,:], poscl[2,:], poscl[3,:], ms = r_Cl, c=:green,  label = nothing, alpha=0.8)
+                  scatter3d!(poscl[1,:], poscl[2,:], poscl[3,:], ms = r_Cl, c=:green,  label = nothing, alpha=0.8)
         return surface
 end
 
@@ -57,11 +57,11 @@ function structure_unitmono(x, lattice_ml, lattice_ol)
 
         end
         
-        co_nacl = nacl_show(14, 9)
-        scatter3d!(co_nacl,ml_c[:,1],ml_c[:,2],ml_c[:,3],ms=9,c=:black,camera=(0,90,), label = nothing)
-        scatter3d!(co_nacl,ml_o[:,1],ml_o[:,2],ml_o[:,3],ms=8,c=:red, ticks=nothing, label = nothing)
-        scatter3d!(co_nacl,ol_c[:,1],ol_c[:,2],ol_c[:,3],ms=9,c=:black,camera=(0,90,),alpha = 0.2, label = nothing)
-        scatter3d!(co_nacl,ol_o[:,1],ol_o[:,2],ol_o[:,3],ms=8,c=:red, ticks=nothing, alpha = 0.2, label = nothing)
+        co_nacl = nacl_show(18*size_reduce, 8*size_reduce)
+        scatter3d!(co_nacl,ml_c[:,1],ml_c[:,2],ml_c[:,3],ms=17*size_reduce,c=:black,camera=(0,90,), label = nothing)
+        scatter3d!(co_nacl,ml_o[:,1],ml_o[:,2],ml_o[:,3],ms=15*size_reduce,c=:red, ticks=nothing, label = nothing)
+        scatter3d!(co_nacl,ol_c[:,1],ol_c[:,2],ol_c[:,3],ms=17*size_reduce,c=:black,camera=(0,90,),alpha = 0.2, label = nothing)
+        scatter3d!(co_nacl,ol_o[:,1],ol_o[:,2],ol_o[:,3],ms=15*size_reduce,c=:red, ticks=nothing, alpha = 0.2, label = nothing)
         # zlims!(co_nacl,0,10)
 
 return co_nacl
