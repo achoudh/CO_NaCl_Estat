@@ -92,8 +92,9 @@ end
 function write_to_file(file_path, data)
         # Step 1: Open the file in write mode
         file = open(file_path, "w")
+        println(file,size(data,1))
         for f in data
-            println(file, f)
+            writedlm(file, f)
         end
         
         close(file)
