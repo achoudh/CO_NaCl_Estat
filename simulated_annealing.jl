@@ -16,6 +16,31 @@ function new_coords(x::Vector{Float64}, δq::Vector{Float64}, flgs::Vector{Int32
     return x_new
 end
 
+function random_coords(x::Vector{Float64}, flgs::Vector{Int32}, δq)
+
+    modified_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
+
+    for (i, f) in enumerate(flgs)
+        r = rand()
+        if f == 0 # Frozen
+            x_new::Float64 = x[i]
+        elseif f == 1 # θ-type coordinates
+            x_new = x[i] + δq[1]*r # As it should be 0 to 180
+        elseif f == 2 # ϕ-type coordinates
+            x_new = x[i] + δq[2]*r # As it should be 0 to 360
+        elseif f == 3
+            x_new = x[i] + (r - δq[3]) # As it should be -0.5 to 0.5
+        elseif f == 4  # z coordinate
+            x_new = x[i] + (r - δq[4])  # How much should it move
+        else 
+            error("random_coords: Unknown flag")
+        end
+        modified_state[i] = x_new
+    end
+
+    return modified_state
+end
+
 # Total energy (intra-monolayer + intra-overlayer + monolayer-Surface + overlayer-Surface + monolayer-overlayer )
 function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol) 
 

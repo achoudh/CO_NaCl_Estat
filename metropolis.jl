@@ -132,22 +132,7 @@ Threads.@threads for i in 1:4
 
     println(Threads.threadid())
 
-    modified_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
-    for (i, f) in enumerate(flgs)
-        r = rand()
-        if f == 0 # Frozen
-            x_new::Float64 = initial_state[i]
-        elseif f == 1 # θ-type coordinates
-            x_new = initial_state[i] + r * 180*degrees # As it should be 0 to 180
-        elseif f == 2 # ϕ-type coordinates
-            x_new = initial_state[i] + r * 360*degrees # As it should be 0 to 360
-        elseif f == 4  # z coordinate
-            x_new = initial_state[i] + (r - 0.2)  # How much should it move
-        else # in-plane
-            x_new = initial_state[i] + (r - 0.5) # As it should be -0.5 to 0.5
-        end
-        modified_state[i] = x_new
-    end
+    modified_state = random_coords(initial_state,flgs,[π, 2*π, 0.5, 0.2])
     
     res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
