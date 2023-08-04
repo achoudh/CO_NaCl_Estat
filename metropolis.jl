@@ -26,8 +26,6 @@ Random.seed!(1234);
 
 # construct a monolayer
 
-random_start = 
-
 # orientation of molecules in a monolayer's unit cell
 θ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees #[30.0,30.0,30.0,30.0]
 ϕ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees #[20.0,60.0,20.0,60.0]
@@ -56,8 +54,9 @@ com0_ol, phi_ol, theta_ol = overlayer(θ_uc, ϕ_uc, z_ol)
 ###########################################
 
 # step vector, and flags defining frozen DoFs
-δq = zeros(Float64, 5*nmols_ml+1+4*nmols_ol2)
-flgs = zeros(Int32, 5*nmols_ml+1+4*nmols_ol2)
+δq     = zeros(Float64, 5*nmols_ml+1+4*nmols_ol2)
+δq_ini = zeros(Float64, 5*nmols_ml+1+4*nmols_ol2)
+flgs   = zeros(Int32, 5*nmols_ml+1+4*nmols_ol2)
 
 # Set initial geometry
 initial_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
@@ -117,49 +116,50 @@ display(combined_plot)
 # Run simulation with randomly modified initial_state #
 #######################################################
 
-# Set ranges for variables to produce an initial state
 
-δθ_global    = 2*π
-δϕ_global    = 2*π
-δxy_global   = 0.1 # surface lattice units
-δz_global    = 0.5 # surface lattice units
-δz_ol_global = 1.0 # surface lattice units
-δq_global = [
-             fill(δθ_global,nmols_ml); fill(δϕ_global,nmols_ml);fill(δxy_global,2*nmols_ml); 
-             fill(δz_global,nmols_ml); δz_ol_global;
-             fill(δθ_global,nmols_ol2); fill(δϕ_global,nmols_ol2);fill(δxy_global,2*nmols_ol2)
-            ]
-
-# Anneal starting from the unmodified initial state
-
-@time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, δq, flgs, 
-             0.4, 10000.0, 100, 1, 2)
-display(plot(res[3], color = :black, label = " ", xlabel = "accepted steps", ylabel = "energy/cm-1")) # .- res[3][1]))
-
-# Anneal starting from a modified state
-Threads.@threads for n in 1:3
-
-#    modified_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
-     for i in 1:length(initial_state)
-        modified_state[i] = new_coords(initial_state, δq_global, flgs,i)
-    end
-
-    @time res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, δq, flgs, 
-                 0.4, 10000.0, 100, 1, 2)
-    display(plot(res[3], color = :black, label = " ", xlabel = "accepted steps", ylabel = "energy/cm-1")) # .- res[3][1]))
-
-end 
-
-stop
+# Set step sizes
 
 @time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
-                            0.4, 10000.0, 100, 1, 2)
-                            # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
-                            # δq::Vector{Float64}, flgs::Vector{Int32}, 
-                            # cooling_rate::Float64, 
-                            # max_temperature::Float64, n_iterations::Int64 , 
-                            # nstep_thermalization::Int64, n_annealing_cycles::Int64)
+                                0.4, 1000000.0, 100, 1, 2)
+                                # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
+                                # δq::Vector{Float64}, flgs::Vector{Int32}, 
+                                # cooling_rate::Float64, 
+                                # max_temperature::Float64, n_iterations::Int64 , 
+                                # nstep_thermalization::Int64, n_annealing_cycles::Int64)
+
+Threads.@threads for i in 1:4
+
+    println(Threads.threadid())
+
+    modified_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
+    for (i, f) in enumerate(flgs)
+        r = rand()
+        if f == 0 # Frozen
+            x_new::Float64 = initial_state[i]
+        elseif f == 1 # θ-type coordinates
+            x_new = initial_state[i] + r * 180*degrees # As it should be 0 to 180
+        elseif f == 2 # ϕ-type coordinates
+            x_new = initial_state[i] + r * 360*degrees # As it should be 0 to 360
+        elseif f == 4  # z coordinate
+            x_new = initial_state[i] + (r - 0.2)  # How much should it move
+        else # in-plane
+            x_new = initial_state[i] + (r - 0.5) # As it should be -0.5 to 0.5
+        end
+        modified_state[i] = x_new
+    end
+    
+    res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
+                                δq, flgs, 
+                                0.4, 1000000.0, 100, 1, 2)
+
+    println("file$i.txt")
+
+end
+
+arnab
+## I am confused about where to put the printings and savings
+
 
 display(plot(res[3], color = :black, label = " ", xlabel = "accepted steps", ylabel = "energy/cm-1")) # .- res[3][1]))
 # println(res[1])
