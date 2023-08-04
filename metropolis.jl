@@ -111,32 +111,50 @@ ipda, isda, ip, is = ir_spectra(νk, initial_state, com0_ml, Δν)
 ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequnecy/cm-1",title="IR-Spectra (domain averaged) initial state")
 combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
 display(combined_plot)
-# arnab
 
 
 #######################################################
 # Run simulation with randomly modified initial_state #
 #######################################################
-# Set step sizes
-δθ = 10.0*degrees
-δϕ = 10.0*degrees
-δxy = 0.05      # surface lattice units
-δz = 0.1        # surface lattice units
-δz_ol = 0.1     # surface lattice units
 
+# Set ranges for variables to produce an initial state
 
-for i in 1:3
-    modified_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
-    for (q, i) in enumerate(initial_state)
-        modified_state[i] = new_coords(q, de)
+δθ_global    = 2*π
+δϕ_global    = 2*π
+δxy_global   = 0.1 # surface lattice units
+δz_global    = 0.5 # surface lattice units
+δz_ol_global = 1.0 # surface lattice units
+δq_global = [
+             fill(δθ_global,nmols_ml); fill(δϕ_global,nmols_ml);fill(δxy_global,2*nmols_ml); 
+             fill(δz_global,nmols_ml); δz_ol_global;
+             fill(δθ_global,nmols_ol2); fill(δϕ_global,nmols_ol2);fill(δxy_global,2*nmols_ol2)
+            ]
+
+# Anneal starting from the unmodified initial state
+
+@time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, δq, flgs, 
+             0.4, 10000.0, 100, 1, 2)
+display(plot(res[3], color = :black, label = " ", xlabel = "accepted steps", ylabel = "energy/cm-1")) # .- res[3][1]))
+
+# Anneal starting from a modified state
+Threads.@threads for n in 1:3
+
+#    modified_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
+     for i in 1:length(initial_state)
+        modified_state[i] = new_coords(initial_state, δq_global, flgs,i)
     end
+
+    @time res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, δq, flgs, 
+                 0.4, 10000.0, 100, 1, 2)
+    display(plot(res[3], color = :black, label = " ", xlabel = "accepted steps", ylabel = "energy/cm-1")) # .- res[3][1]))
 
 end 
 
+stop
 
 @time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
-                            0.4, 1000000.0, 100, 1, 2)
+                            0.4, 10000.0, 100, 1, 2)
                             # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
                             # δq::Vector{Float64}, flgs::Vector{Int32}, 
                             # cooling_rate::Float64, 
