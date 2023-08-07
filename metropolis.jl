@@ -55,7 +55,6 @@ com0_ol, phi_ol, theta_ol = overlayer(θ_uc, ϕ_uc, z_ol)
 
 # step vector, and flags defining frozen DoFs
 δq     = zeros(Float64, 5*nmols_ml+1+4*nmols_ol2)
-δq_ini = zeros(Float64, 5*nmols_ml+1+4*nmols_ol2)
 flgs   = zeros(Int32, 5*nmols_ml+1+4*nmols_ol2)
 
 # Set initial geometry

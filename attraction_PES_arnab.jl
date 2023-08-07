@@ -98,8 +98,7 @@ end
 # CO-CO electrostatic: multipoles at COM #
 ##########################################
 
-function co_co_interaction(R12::Vector{Float64}, phi1::Float64, theta1::Float64, phi2::Float64, theta2::Float64,
-    rep_on::Int64=1, disp_on::Int64=1)
+function co_co_interaction(R12::Vector{Float64}, phi1::Float64, theta1::Float64, phi2::Float64, theta2::Float64)
 
     # Determines the electrostatic interaction energy between two CO molecules
     # using electrostatic interaction, dispersion and repulsion
