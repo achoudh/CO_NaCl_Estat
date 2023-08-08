@@ -1,6 +1,7 @@
 using Random
 using LinearAlgebra
 using Printf
+using GLMakie
 
 #########################
 # Pre-defined functions #
@@ -8,7 +9,7 @@ using Printf
 
 include("constants.jl")
 include("lattice_construction.jl")
-include("visualization.jl")
+include("visualization_makie.jl")
 
 ## Turn on the interaction needed ##
 include("site_surface_interaction.jl")
@@ -104,7 +105,41 @@ println("Initial state:")
 println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol))
 
 # Display Structure and IR Spectra
-ml_structure = structure_unitmono(initial_state, com0_ml, com0_ol)
+
+fig = Figure()
+ax_sp = Axis(fig[1, 1],
+            title = L"IR-Spectra (domain averaged) initial state$ $",
+            xlabel = L"Frequnecy / cm$^{-1}$",
+            ylabel = L"Intentsity / a.u.$ $")
+ax_st = LScene(fig[2, 1],limits = Rect(0,0,0,1,1,1))#, title = L"Structure$ $")
+
+ipda, isda, ip, is = ir_spectra(νk, initial_state, com0_ml, Δν)
+lines!(ax_sp, νk, ipda, color=:black, label="p-pol")
+lines!(ax_sp, νk, isda, color=:blue, label="s-pol")
+axislegend(ax_sp)
+
+#mesh!(fig[2,1], ml_C[1,1], ml_C[2,1], ml_C[3,1], markersize = 0.2, color=:black)
+ml_C, ml_O, ol_C, ol_O  = structure_unitmono(initial_state, com0_ml, com0_ol)
+meshscatter!(fig[2,1], ml_C[1,:], ml_C[2,:], ml_C[3,:], markersize = 0.2, color=:black)
+meshscatter!(fig[2,1], ml_O[1,:], ml_O[2,:], ml_O[3,:], markersize = 0.2, color=:red)
+#meshscatter!(fig[2,1], ol_C[1,:], ol_C[2,:], ol_C[3,:], markersize = 0.2, color=:black)
+#meshscatter!(fig[2,1], ol_O[1,:], ol_O[2,:], ol_O[3,:], markersize = 0.2, color=:red)
+r_Na, r_Cl = nacl_show()
+#meshscatter!( fig[2,1], r_Na[1,:], r_Na[2,:], r_Na[3,:], markersize = 0.1, color=:gray)
+#meshscatter!(fig[2,1], r_Cl[1,:], r_Cl[2,:], r_Cl[3,:], markersize = 0.3, color=:green)
+#xlims!(ax_st,-1.0, 1.0)
+#ylims!(ax2, -3.8, 3.8)
+#zlims!(ax2, -3.8, 3.8)
+
+
+display(fig)
+arnab
+
+ax = lines(fig,νk, ipda)
+ml_spectra = lines!(νk, isda)
+
+
+arnab
 ipda, isda, ip, is = ir_spectra(νk, initial_state, com0_ml, Δν)
 ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequnecy/cm-1",title="IR-Spectra (domain averaged) initial state")
 combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
