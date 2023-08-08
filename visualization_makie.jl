@@ -1,10 +1,17 @@
-using Plots
-#gr()
-plotly()
+# using Plots
+# #gr()
+# plotlyjs()
 
-# Set default plot attributes
-default(titlefontsize=12, labelfontsize=10, linewidth=2, legendfontsize=8, 
-        guidefont=font(10), tickfont=font(10), thickness_scaling=1.15, size = (700, 400)) #, frame=:box
+# # Set default plot attributes
+# default(titlefontsize=12, labelfontsize=10, linewidth=2, legendfontsize=8, 
+#         guidefont=font(10), tickfont=font(10), thickness_scaling=1.15, size = (700, 400)) #, frame=:box
+
+
+using GLMakie
+
+# scene = meshscatter(x, y, z, markersize = 10, color = :white)
+# scene
+# display(scene)
 
 size_reduce = 0.2
 
@@ -16,8 +23,9 @@ function nacl_show(r_Cl,r_Na)
         posna = hcat([[i, j, 0] for i in 0:ll for j in 0:mm]...)
         poscl = hcat([[i+0.5, j+0.5, 0] for i in 0:ll-1 for j in 0:mm-1]...)
 
-        surface = scatter3d(posna[1,:], posna[2,:], posna[3,:], ms = r_Na, c=:gray, label = nothing)
-                  scatter3d!(poscl[1,:], poscl[2,:], poscl[3,:], ms = r_Cl, c=:green,  label = nothing, alpha=0.8)
+        surface = Figure()
+        surface = meshscatter(posna[1,:], posna[2,:], posna[3,:], markersize = r_Na, color=:gray, label = nothing)
+        surface = meshscatter!(surface, poscl[1,:], poscl[2,:], poscl[3,:], markersize = r_Cl, color=:green,  label = nothing, alpha=0.8)
         return surface
 end
 
@@ -58,10 +66,10 @@ function structure_unitmono(x, lattice_ml, lattice_ol)
         end
         
         co_nacl = nacl_show(18*size_reduce, 8*size_reduce)
-        scatter3d!(co_nacl,ml_c[:,1],ml_c[:,2],ml_c[:,3],ms=17*size_reduce,c=:black,camera=(0,90,), label = nothing)
-        scatter3d!(co_nacl,ml_o[:,1],ml_o[:,2],ml_o[:,3],ms=15*size_reduce,c=:red, ticks=nothing, label = nothing)
-        scatter3d!(co_nacl,ol_c[:,1],ol_c[:,2],ol_c[:,3],ms=17*size_reduce,c=:black,camera=(0,90,),alpha = 0.2, label = nothing)
-        scatter3d!(co_nacl,ol_o[:,1],ol_o[:,2],ol_o[:,3],ms=15*size_reduce,c=:red, ticks=nothing, alpha = 0.2, label = nothing)
+        scatter3d!(co_nacl,ml_c[:,1],ml_c[:,2],ml_c[:,3],markersize=17*size_reduce,color=:black,camera=(0,90,), label = nothing)
+        scatter3d!(co_nacl,ml_o[:,1],ml_o[:,2],ml_o[:,3],markersize=15*size_reduce,color=:red, ticks=nothing, label = nothing)
+        scatter3d!(co_nacl,ol_c[:,1],ol_c[:,2],ol_c[:,3],markersize=17*size_reduce,color=:black,camera=(0,90,),alpha = 0.2, label = nothing)
+        scatter3d!(co_nacl,ol_o[:,1],ol_o[:,2],ol_o[:,3],markersize=15*size_reduce,color=:red, ticks=nothing, alpha = 0.2, label = nothing)
         # zlims!(co_nacl,0,10)
 
 return co_nacl
@@ -100,3 +108,5 @@ function write_to_file(file_path, data)
         close(file)
         
 end
+
+nacl_show(14,4)

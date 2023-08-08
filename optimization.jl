@@ -1,235 +1,235 @@
-include("constants.jl")
-# include("co_co_interactions.jl")
-include("site_surface_interaction.jl")
-include("lattice_construction.jl")
-include("co_co_Guo.jl")
+################################################################################
+                                    ########
+                                    # NOTE #
+                                    ########
 
-using Optim
+# This program finds the minimum energy structure for bare and buried monolayer
+# Only considers the attraction interactions 
+# includes "attraction_PES_arnab.jl" where the attraction protections are listed
+
+
+################################################################################
+
+using Random
+using LinearAlgebra
 using Printf
-using Plots
-plotly()
+using Optim
+
+#########################
+# Pre-defined functions #
+#########################
+
+include("constants.jl")
+include("lattice_construction.jl")
+include("visualization_makie.jl")
+include("ir_spectra.jl")
+include("attraction_PES_arnab.jl")
 
 
-comml, bondlength_ml, phi_ml, theta_ml = zeros(Float64, nx*ny, 3), zeros(Float64, nx*ny), zeros(Float64, nx*ny), zeros(Float64, nx*ny)
-comol, bondlength_ol, phi_ol, theta_ol = zeros(Float64, nx*ny*nz, 3), zeros(Float64, nx*ny*nz), zeros(Float64, nx*ny*nz), zeros(Float64, nx*ny*nz)
-rvec, ml_o, ml_c, ml_bc = zeros(Float64, 3), zeros(Float64, 3), zeros(Float64, 3), zeros(Float64, 3)
+##################
+# Initialization #
+##################
+
+# Random.seed!(1234);
+
+# construct a monolayer
+
+# orientation of molecules in a monolayer's unit cell
+θ_uc = zeros(Float64, 4) + [30.0,30.0,30.0,30.0] * degrees
+ϕ_uc = zeros(Float64, 4) + [20.0,60.0,20.0,60.0] * degrees
+# monolayer-surface distance (reduced units)
+z_ml = 3.35e-10/a0_surf
+# get a monolayer molecules' reduced positions and orientation
+com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
+# deviation vectors of molecular positions (r = com0 + δr)
+δr_ml = zeros(Float64,nmols_ml,3)
+
+# construct an overlayer
+
+# orientation of molecules in an overlayer's unit cell
+θ_uc = [ 3, 1, 3, 1, 1, 3, 1, 3]*pi/4.0  # The old structure [ 3, 1, 3, 1, 3, 1, 3, 1]*pi/4.0 is not correct
+ϕ_uc = [-1, 0,-1, 0, 1, 2, 1, 2]*pi/2.0 
+trig_uc = (sin.(θ_uc), cos.(θ_uc), sin.(ϕ_uc), cos.(ϕ_uc))
+# overlayer-surface distance (reduced units)
+z_ol = z_ml + 0.5*a0_CO/a0_surf #+ 10.00*a0_CO/a0_surf
+# get an overlayer molecules' reduced positions and orientation
+com0_ol, phi_ol, theta_ol = overlayer(θ_uc, ϕ_uc, z_ol)
+# deviation vectors of molecular positions (r = com0 + δr)
+δr_ol = zeros(Float64,nmols_ol2,2)
+
+###########################
+# set up initial geometry #
+###########################
+
+# Set initial geometry for monolayer
+initial_state = zeros(Float64, 2*nmols_ml)
+initial_state[1 + 0*nmols_ml:1*nmols_ml] = theta_ml     # θ
+initial_state[1 + 1*nmols_ml:2*nmols_ml] = phi_ml       # ϕ 
+
+δr_ml = vec(δr_ml)   # δr
+# δr_ml[1 + 0*nmols_ml:1*nmols_ml] = vec(δr_ml)   # δr
+# δr_ml[1 + 1*nmols_ml:2*nmols_ml] = vec(δr_ml)   # δr
+# δr_ml[1 + 2*nmols_ml:3*nmols_ml] = fill(δz_ml, nmols_ml)   # δr
+
+lower = zeros(Float64, 2*nmols_ml)
+upper = zeros(Float64, 2*nmols_ml)
+upper[1 + 0*nmols_ml:1*nmols_ml] = fill(π, nmols_ml)     # θ
+upper[1 + 1*nmols_ml:2*nmols_ml] = fill(2*π, nmols_ml)
 
 
-# #global dz = 0.5
-# theta_m = zeros(Float64,4)
-# phi_m = zeros(Float64,4)
-# z_ml = 3.1e-10/a0_surf
-# comml, bondlength_ml, phi_ml, theta_ml = monolayer(theta_m, phi_m, z_ml)
+# overlayer
+overlayer_states = zeros(Float64, 2*nmols_ol2)
+overlayer_states[1 + 0*nmols_ol2 : 1*nmols_ol2] = theta_ol[1:nmols_ol2]    # θ
+overlayer_states[1 + 1*nmols_ol2 : 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
 
-# Vmlml = 0.0 #zeros(Float64,1)
-# @time for i in 1:nmols_ml-1, j in i+1:nmols_ml
-#     local rvec12::Vector{Float64} = (comml[i,:] - comml[j,:])
-#     rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
-#     rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
-#     rvec12 = a0_surf .* rvec12
-#     # Vmlml .+= co_co_interaction(rvec12, bondlength_ml[i], phi_ml[i], theta_ml[i], bondlength_ml[j], phi_ml[j], theta_ml[j])
-#     Vmlml += co_co_int_nu(rvec12, phi_ml[i], theta_ml[i], phi_ml[j], theta_ml[j])
-# end
-# Vmlml
+###################
+# Energy function #
+###################
 
+# Total energy (intra-monolayer + intra-overlayer + monolayer-Surface + overlayer-Surface + monolayer-overlayer )
+function energy(x::Vector{Float64}, lattice_ml::Matrix{Float64}=com0_ml,
+             lattice_ol::Matrix{Float64}=com0_ol, ϕ_ol::Vector{Float64}=phi_ol, θ_ol::Vector{Float64}=theta_ol) 
 
-## Functions
-    function show_params(x,zml)
-        
-        theta_m = x[1:4]  #fill(38.0,4) * pi / 180.0
-        phi_m = x[5:8] 
-        ml_in = zeros(Float64, 4, 3)
-        ml_in[:,1] = x[9:12]
-        ml_in[:,2] = x[13:16]
-        #ml_in[:,3] = x[17:20]
-        if length(x)==21
-            z_ml = fill(zml + x[21]*a0_surf, 4)
-        else 
-            z_ml = fill(zml, 4)
-        end
-        out = hcat(theta_m, phi_m, ml_in[:,1].*a0_surf/1e-10, ml_in[:,2].*a0_surf/1e-10, z_ml .*a0_surf/1e-10)
-        
-        @printf("%-10s %-10s %-10s %-10s %-10s\n", "θ", "ϕ", "x", "y", "z")
-        for i in 1:4
-        @printf("%f %f  %f  %f  %f\n",out[i,1],out[i,2],out[i,3],out[i,4],out[i,5])
-        end
-        return out
-    end
+    theta_ml = x[1+0*nmols_ml:1*nmols_ml]
+    phi_ml   = x[1+1*nmols_ml:2*nmols_ml]
 
-
-    function nacl()
-        
-        cls = 20
-        nac = 10
-
-        ll = nx*2 - 1
-        mm = ny*2 - 1
-
-        posna= [[i, j, 0] for i in 0:ll for j in 0:mm]
-        poscl = [[i+0.5, j+0.5, 0] for i in 0:ll-1 for j in 0:mm-1]
-
-        #na_x = [posna[i][1]  for i in eachindex(posna)]
-        na_r = hcat(posna...)
-        cl_r = hcat(poscl...)
-
-        na = scatter3d(na_r[1,:], na_r[2,:], na_r[3,:], ms = nac, c=:violet, label = "Na")
-        scatter3d!(cl_r[1,:], cl_r[2,:], cl_r[3,:], ms = cls, c=:green, alpha=0.8, label = "Cl")
-        return na
-    end
-
-
-    function display_structure_unitmono(x)
-        theta_m = x[1:4] .* pi / 180.0 #fill(38.0,4) * pi / 180.0
-        phi_m = x[5:8] .* pi / 180
-        ml_in = zeros(Float64, 4, 3)
-        #ml_in[:,1] = x[9:12]
-        #ml_in[:,2] = x[13:16]
-        #ml_in[:,3] = x[17:20]
-        global z_ml = 4.1e-10/a0_surf #+ x[17] #:5*nmols_ml] #fill(x[17],4)
-        global dz = 0.5 #+ x[18] #x[2+4*nmols_ml]
-        comml, bondlength_ml, phi_ml, theta_ml = monolayer(theta_m, phi_m, z_ml ) #fill(x[17],4)
-        vv, ww, bcc = [v, w, bc] ./a0_surf
-        
-        ml_o = zeros(Float64,nmols_ml,3)
-        ml_c = zeros(Float64,nmols_ml,3)
-        ml_bc = zeros(Float64,nmols_ml,3)
-        
-        
-        ml_in = repeat(ml_in, outer=(nx*ny))
-        comml += ml_in
-        
-        for i in 1:nmols_ml
-            rvec = comml[i,:]
-            
-            stheta, sphi, costheta, cosphi = sin(theta_ml[i]), sin(phi_ml[i]), cos(theta_ml[i]), cos(phi_ml[i])
-            ml_o[i,:] = rvec + [vv*stheta*cosphi, vv*stheta*sphi, vv*costheta]
-            
-            ml_c[i,:] = rvec + [-ww*stheta*cosphi, -ww*stheta*sphi, -ww*costheta]
-            ml_bc[i,:] = rvec + [-bcc*stheta*cosphi, -bcc*stheta*sphi, -bcc*costheta]    
-        end
-        
-        na = nacl()
-        display(na)
-        scatter3d!(ml_c[:,1],ml_c[:,2],ml_c[:,3],ms=9,c=:black,camera=(0,90,),label="C")
-        scatter3d!(ml_o[:,1],ml_o[:,2],ml_o[:,3],ms=8,c=:red, ticks=nothing, label = "O")
-        zlims!(0,10)
-        return na
-    end
-
-
-
-
-θ_over::Vector{Float64} = [pi*3.0/4.0, pi/4.0, 3.0*pi/4.0, pi/4.0, 3.0*pi/4.0, pi/4.0, 3.0*pi/4.0, pi/4.0]
-ϕ_over::Vector{Float64} = [-pi/2.0, 0.0, -pi/2.0, 0.0, pi/2.0, pi, pi/2.0, pi]
-
-comol, bondlength_ol, phi_ol, theta_ol = overlayer(θ_over, ϕ_over, dz, z_ml)
-comml1 = copy(comml)
-comol1 = copy(comol) 
-
-
-function opt_ol_full(x::Vector{Float64}) #all coordinate of the xC_unitcell is set free except z_ml
-    theta_m::Vector{Float64} = x[1:4] .* pi / 180.0 #fill(38.0,4) * pi / 180.0
-    phi_m::Vector{Float64} = x[5:8] .* pi / 180
-    ml_in = zeros(Float64, 4, 3)
-    ml_in[:,1] = x[9:12]
-    ml_in[:,2] = x[13:16]
-    ml_in[:,3] = x[17:20]
-    z_ml = 3.32e-10/a0_surf #+ x[21] #:5*nmols_ml] #fill(x[17],4)
-    global dz = 0.5 #+ x[22] #x[2+4*nmols_ml]
-    comml, bondlength_ml, phi_ml, theta_ml = monolayer(theta_m, phi_m, z_ml)
+    δr_ml[1 + 2*nmols_ml:3*nmols_ml] = fill(δz_ml, nmols_ml)
     
-    ml_in[:,1] = ml_in[:,1] - round.(ml_in[:,1])
-    ml_in[:,2] = ml_in[:,2] - round.(ml_in[:,2])
-
-    comol, bondlength_ol, phi_ol, theta_ol = overlayer(θ_over, ϕ_over, z_ml, dz)
-    comml1 = copy(comml)
-    comol1 = copy(comol)
-
-    ml_in = repeat(ml_in, outer=(nx*ny))
-    comml = comml1 + ml_in
-    #Energy
-        #ol_in = zeros(Float64, nmols_ol, 3)
-        Vmlml = 0.0 #zeros(Float64,1)
-        for i in 1:nmols_ml-1, j in i+1:nmols_ml
-            local rvec12 = (comml[i,:] - comml[j,:])
-            rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
-            rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
-            rvec12 = a0_surf .* rvec12
-            # Vmlml .+= co_co_interaction(rvec12, bondlength_ml[i], phi_ml[i], theta_ml[i], bondlength_ml[j], phi_ml[j], theta_ml[j])
-            Vmlml += co_co_int_nu(rvec12, phi_ml[i], theta_ml[i], phi_ml[j], theta_ml[j])
-        end
-        
-        Vmlsurf = zeros(Float64,3)
-        for i in 1:nmols_ml
-            stheta, sphi, costheta, cosphi = sin(theta_ml[i]), sin(phi_ml[i]), cos(theta_ml[i]), cos(phi_ml[i])
-            rvec = ml_in[i,:] .* a0_surf
-            rvec[3] += comml1[i,3]*a0_surf
-
-            ml_o = rvec + [v*stheta*cosphi, v*stheta*sphi, v*costheta]
-            ml_c = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
-            ml_bc = rvec + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
-            
-            out_attr = mol_surf_attr_stone(ml_o, ml_c, ml_bc, costheta)
-            out_rep, out_disp = mol_surf_rep_stone(ml_o, ml_c, 4)
-            Vmlsurf .+= [out_attr, out_rep,- out_disp]
-        end
-        
-        Vmlol = 0.0 #zeros(Float64, 11)
-        for i in 1:nmols_ml, j in i:nmols_ol
-            local rvec12 = (comml[i,:] .- comol[j,:])
-            
-            rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
-            rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
-            rvec12 = a0_surf .* rvec12
-
-            # Vmlol .+= co_co_interaction(rvec12, bondlength_ml[i], phi_ml[i], theta_ml[i],bondlength_ol[j], phi_ol[j], theta_ol[j])
-            
-            Vmlol += co_co_int_nu(rvec12, phi_ml[i], theta_ml[i], phi_ol[j], theta_ol[j])
-        end
-
-        Volsurf = zeros(Float64,3)
-        for i in 1:nmols_ol
-            if (comol1[i,3] - dz*a0_CO/a0_surf -comml1[1,3]) <0.02
-            rvec = [-0.5, -0.5, comol1[i,3]] .*a0_surf
-            stheta, sphi, costheta, cosphi = sin(theta_ol[i]), sin(phi_ol[i]), cos(theta_ol[i]), cos(phi_ol[i])
-            
-
-            ml_o = rvec + [v*stheta*cosphi, v*stheta*sphi, v*costheta]
-            ml_c = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
-            ml_bc = rvec + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
-            
-            out_attr = mol_surf_attr_stone(ml_o, ml_c, ml_bc, costheta)
-            out_rep, out_disp = mol_surf_rep_stone(ml_o, ml_c, 4)
-            Volsurf .+= [out_attr, out_rep,- out_disp]
-            end
-        end
-    # out = (Vmlml[1]+Vmlol[1]+sum(Vmlsurf)+sum(Volsurf))*joule2wn/nmols_ml
-    out = ((sum(Vmlsurf)+sum(Volsurf))*joule2wn + Vmlml + Vmlol)/nmols_ml
+    theta_ol = overlayer_states[1+0*nmols_ol2:1*nmols_ol2]
+    phi_ol   = overlayer_states[1+1*nmols_ol2:2*nmols_ol2]
+    # xy_ol    = fixed_states[1+2*nmols_ol2:4*nmols_ol2]
     
-    return  out
+    # intra-monolayer interaction
+
+    pot_mlml = Float64(0.0)
+    for i in 1:nmols_ml-1, j in i+1:nmols_ml
+        rvec12 = lattice_ml[i,:] - lattice_ml[j,:] + δr_ml[i:nmols_ml:end] - δr_ml[j:nmols_ml:end] 
+        rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
+        rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
+        rvec12 = a0_surf .* rvec12
+        pot_mlml += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], phi_ml[j], theta_ml[j])
+    end
+
+    # intra-overlayer interaction
+    # println("mol. 1","\t", "mol. 2","\t", "Distance/Å","\t \t", "Energy/cm-1")
+    pot_olol = Float64(0.0)
+    for i in 1:nmols_ol2-1, j in i+1:nmols_ol2
+        rvec12 = lattice_ol[i,:] - lattice_ol[j,:] # +[ xy_ol[i:nmols_ol2:end] - xy_ol[j:nmols_ol2:end] ; 0 ]
+        rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
+        rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
+        rvec12 = a0_surf .* rvec12
+        pot_olol += co_co_interaction(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j])
+        # println(i,"\t", j,"\t", norm(rvec12)/1e-10,"\t \t", co_co_interaction(rvec12, phi_ol[i], theta_ol[i], phi_ol[j], theta_ol[j]))
+    end
+    # println(pot_olol)
+    for i in 1:nmols_ol2, j in 1+nmols_ol2:nmols_ol
+        rvec12 = lattice_ol[i,:] - lattice_ol[j,:] # + [xy_ol[i:nmols_ol2:end] ; 0 ]
+        rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
+        rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
+        rvec12 = a0_surf .* rvec12
+        # println(rvec12)
+        pot_olol += co_co_interaction(rvec12, phi_ol[i], theta_ol[i], ϕ_ol[j], θ_ol[j])
+    end
+
+    # Monolayer-Surface interaction
+
+    pot_mlsurf = Float64(0.0)
+    for i in 1:nmols_ml
+
+        stheta, sphi, costheta, cosphi = sin(theta_ml[i]), sin(phi_ml[i]), cos(theta_ml[i]), cos(phi_ml[i])
+        rvec = [δr_ml[i], δr_ml[i+nmols_ml], δr_ml[i+2*nmols_ml] + lattice_ml[i,3]] * a0_surf
+                
+        pot_mlsurf += mol_surf_attr_arnab(rvec, costheta)
+    end
+
+    # Overlayer-Surface interaction
+
+    pot_olsurf = Float64(0.0)
+    for i in 1:nmols_ol2
+
+        rvec = lattice_ol[i,:]
+        rvec[1] -= round(rvec[1])
+        rvec[2] -= round(rvec[2])
+
+        stheta, sphi, costheta, cosphi = sin(theta_ol[i]), sin(phi_ol[i]), cos(theta_ol[i]), cos(phi_ol[i])
+        rvec += [0.0, 0.0, δz_ol] 
+        rvec *= a0_surf
+
+        pot_olsurf += mol_surf_attr_arnab(rvec, costheta)
+    end
+
+    # overlayer-monolayer interaction
+
+   pot_mlol = Float64(0.0)
+   for i in 1:nmols_ml, j in 1:nmols_ol2
+        rvec12 = lattice_ml[i,:] - lattice_ol[j,:] + δr_ml[i:nmols_ml:end] - [0.0, 0.0, δz_ol]
+        rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
+        rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
+        rvec12 = a0_surf .* rvec12
+        pot_mlol += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], phi_ol[j], theta_ol[j])
+    end
+    for i in 1:nmols_ml, j in 1+nmols_ol2:nmols_ol
+        rvec12 = lattice_ml[i,:] - lattice_ol[j,:] + δr_ml[i:nmols_ml:end] - [0.0, 0.0, δz_ol]
+        rvec12[1] = rvec12[1] - 2*nx*round(Int, rvec12[1]/(2*nx))
+        rvec12[2] = rvec12[2] - 2*ny*round(Int, rvec12[2]/(2*ny))
+        rvec12 = a0_surf .* rvec12
+        pot_mlol += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], ϕ_ol[j], θ_ol[j])
+    end
+
+    return pot_mlml + pot_olol + (pot_mlsurf + pot_olsurf)*joule2wn + pot_mlol
 end 
 
 
-x = zeros(Float64, 20)
-@time opt_ol_full(x)
+####################
+# Run optimization #
+####################
 
-x[1:4] = [0.0,0.0,0.0,0.0]# fill(26.0,4)
+δz_ml, δz_ol = 0.0, 0.0
+println(energy(initial_state))
+
 g_tol = 1e-8
-
 x_tol = 1e-8
 f_tol = 1e-8
-@time res_over = optimize(opt_ol_full, x, LBFGS(), Optim.Options(g_tol=g_tol,x_tol=x_tol, f_tol=f_tol, iterations = 2000))
-print(res_over)
-println(res_over.minimizer)
-opt_ol_full(res_over.minimizer)
+inner_optimizer = LBFGS()
+@time res_over = optimize(energy, lower, upper, initial_state, Fminbox(inner_optimizer), Optim.Options(g_tol=g_tol, x_tol=x_tol, f_tol=f_tol, iterations = 2000))
+println(res_over)
+# println(res_over.minimizer)
+# energy(res_over.minimizer)
 
-for i in 1:nmols_ol
-    if abs(comol[i,3] - 0.5*a0_CO/a0_surf - comml[1,3]) <0.01
-        println(comol[i,:])
-    end
-end
 
-display_structure_unitmono(x)
-display_structure_unitmono(res_over.minimizer)
-show_params(res_over.minimizer)
+# Set combined geometry
+final_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
+# monolayer
+final_state[1 + 0*nmols_ml:2*nmols_ml] = res_over.minimizer     # θ
+# final_state[1 + 1*nmols_ml:2*nmols_ml] = phi_ml       # ϕ 
+final_state[1 + 2*nmols_ml:5*nmols_ml] = vec(δr_ml)   # δr
+final_state[ndofs_ml]                  = 0.0          # overlayer height deviation from c.-of-m.
+# overlayer
+final_state[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = theta_ol[1:nmols_ol2]    # θ
+final_state[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
+final_state[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = vec(δr_ol)   # δr
 
+
+show_params(final_state)# Display final Structure and IR Spectra
+ipda, isda, ip, is = ir_spectra(νk, final_state, com0_ml, Δν)
+
+fig = Figure()
+ax = Axis
+    (fig[1, 1],
+        title = "A Makie Axis",
+        xlabel = "The x label",
+        ylabel = "The y label"
+    )
+
+ax = lines(νk, ipda)
+ml_spectra = lines!(νk, isda)
+
+ml_structure       = structure_unitmono(final_state, com0_ml, com0_ol)
+ml_structure1      = scatter3d(ml_structure, camera=(10,20,), label = nothing, ticks=nothing, axes=nothing,zlims =(0,7))
+combined_plot1     = scatter3d!(ml_structure,ml_structure1,layout=(1,2))
+combined_plot      = plot!(ml_spectra, combined_plot1, layout=(2,1), size = (700, 400), dpi = 1200)
+
+display(combined_plot)
+
+νk, ipda
+f
