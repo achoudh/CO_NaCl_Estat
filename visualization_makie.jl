@@ -86,11 +86,71 @@ end
 function write_to_file(file_path, data)
         # Step 1: Open the file in write mode
         file = open(file_path, "w")
-        println(file,size(data,1))
-        for f in data
-            writedlm(file, f)
-        end
+        println(file, "number of iterations")
+        println(file, size(data[1],1)-1)
+
+        println(file,"\nBest Energies from each iterations")
+        writedlm(file, [data[1]])
         
+        println(file,"\nBest states from each iterations, state 1 in initial")
+        writedlm(file, size(data[2][1],1))
+        writedlm(file, data[2])
+
+        println(file,"\nEnergies at accepted steps")
+        writedlm(file, size(data[3],1))
+        writedlm(file, [data[3]])
+
         close(file)
         
+end
+
+function show_figure(x::Vector{Float64}, lattice_ml::Matrix{Float64}, lattice_ol::Matrix{Float64}, figtitle::String, plot_ol::Int64 = 1)
+        fig0 = Figure(resolution=(600,800))
+
+        ax_sp = Axis(fig0[1:2, 1],
+                title  = figtitle,
+                titlesize = 22,
+                titlefont = "Times New Roman",
+                subtitle = L"IR-Spectra (domain averaged)$ $",
+                xlabel = L"Frequnecy/cm$^{-1}$",
+                ylabel = L"Intentsity/a.u.$ $",
+                xlabelsize = 18, 
+                ylabelsize = 18, 
+                xticklabelfont = "Times New Roman",
+                yticklabelfont = "Times New Roman")
+
+        ax_st = LScene(fig0[3:5, 1], show_axis=false) #, title = L"Structure$ $") ,limits = Rect(0,0,0,1,1,1)
+
+        ipda, isda, ip, is = ir_spectra(νk, initial_state, lattice_ml, Δν)
+        lines!(ax_sp, νk, ipda, color=:black, label=L"p-pol$ $")
+        lines!(ax_sp, νk, isda, color=:blue,  label=L"s-pol$ $")
+        axislegend(ax_sp, titlefont = "Times New Roman")
+
+        ml_C, ml_O, ol_C, ol_O  = structure_unitmono(initial_state, lattice_ml, lattice_ol)
+        meshscatter!(ax_st, ml_C[:,1], ml_C[:,2], ml_C[:,3], markersize = 0.2, color=:black)#, limits = Rect(-1, -1, -1, 5, 5, 1))
+        meshscatter!(ax_st, ml_O[:,1], ml_O[:,2], ml_O[:,3], markersize = 0.2, color=:red)
+        if plot_ol==1
+                meshscatter!(ax_st, ol_C[:,1], ol_C[:,2], ol_C[:,3], markersize = 0.2, color=(:black, 0.3))#, transparency = true)
+                meshscatter!(ax_st, ol_O[:,1], ol_O[:,2], ol_O[:,3], markersize = 0.2, color=(:red, 0.3))#, transparency = true)
+        end
+
+        r_Na, r_Cl = nacl_show()
+        meshscatter!(ax_st, r_Na[1,:], r_Na[2,:], r_Na[3,:], markersize = 0.1, color=:gray)
+        meshscatter!(ax_st, r_Cl[1,:], r_Cl[2,:], r_Cl[3,:], markersize = 0.3, color=:green)
+        return fig0
+end
+
+function set_axis(fig, xlabel, ylabel)
+        ax = Axis(fig,
+                titlesize = 22,
+                titlefont = "Times New Roman",
+                xlabel = xlabel,
+                ylabel = ylabel,
+                xlabelsize = 18, 
+                xlabelfont = "Times New Roman",
+                ylabelfont = "Times New Roman",
+                ylabelsize = 18, 
+                xticklabelfont = "Times New Roman",
+                yticklabelfont = "Times New Roman")
+        return ax
 end

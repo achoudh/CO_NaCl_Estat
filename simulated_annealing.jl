@@ -335,12 +335,14 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml,
                                 max_temperature::Float64, n_iterations::Int64 , 
                                 nstep_thermalization::Int64, n_annealing_cycles::Int64)
 
-    int_min = zeros(Float64,n_annealing_cycles)
+    
     # Initialize the current state
     current_state = deepcopy(initial_state)
     current_energy::Float64  = energy(current_state, lattice_ml, lattice_ol, phi_ol, theta_ol)
     new_state = deepcopy(initial_state)
-    del::Vector{Float64} = [current_energy]
+
+    int_min::Vector{Float64} = [current_energy] # Intermediate minimums or best energies
+    accepted_step_energies::Vector{Float64} = [current_energy] # Energies at the accepted states
  
     # Initialize the best state
     best_state = deepcopy(initial_state)
@@ -348,7 +350,7 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml,
     delta::Float64 = 0.0
 
     # Keep track of all best states
-    all_best_states = zeros(Float64, n_annealing_cycles, size(initial_state,1))
+    all_best_states::Vector{Vector{Float64}} = [initial_state]
 
     # Exclude frozen Dofs
     flex_dofs = (1:size(initial_state,1))[flgs .!=0]
@@ -417,7 +419,7 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml,
                 if delta <= 0 || rand() < acceptance_probability(delta, temp)
                     current_state[i] = new_state[i]
                     current_energy = current_energy + delta
-                    push!(del, current_energy)
+                    push!(accepted_step_energies, current_energy)
                 else
                     new_state[i] = current_state[i]
                 end
@@ -432,16 +434,9 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml,
             # Update the temperature
             temp = annealing_schedule(temp, cooling_rate)
         end
-        int_min[it] = best_energy 
 
-        # Display Structure and IR Spectra
-        ml_structure = structure_unitmono(best_state, com0_ml, com0_ol)
-        ipda, isda, ip, is = ir_spectra(νk, best_state, com0_ml, Δν)
-        ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"], title=string("IR-Spectra (domain averaged)", string(it)))
-        combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
-        display(combined_plot)
-
-        all_best_states[it,:] = best_state
+        push!(int_min, best_energy)
+        push!(all_best_states, best_state)
     end
-    return best_state, best_energy, del, int_min, all_best_states
+    return int_min, all_best_states, accepted_step_energies # Removed "best_state, best_energy" as the int_min and all_best_states already includes initial_state and all
 end

@@ -2,6 +2,29 @@
 # Now testing CO-CO potential #
 ###############################
 
+include("visualization_makie.jl")
+
+data = readdlm("buried_ov_fixed_dof.txt")
+
+no_of_iteration = data[2] 
+energies = [i for i in data[4,:] if i != ""]
+dof = data[6]
+states = [[i for i in data[j,:] if i != ""] for j in 7:7+no_of_iteration]
+
+accepted_step_energies = [i for i in data[7+no_of_iteration+3,:] if i != ""] 
+
+
+fig = Figure(resolution = (600, 600))
+ax1 = set_axis(fig[1,1], L"Energie/cm$^{-1}$", "")
+hist!(ax1, energies[2:end], 10)
+ax2 = set_axis(fig[2,1], "Steps", L"Energie/cm$^{-1}$")
+lines!(ax2, accepted_step_energies)
+display(fig)
+
+display(GLMakie.Screen(),show_figure(states[1], com0_ml, com0_ol, "Initial"))
+for (i,s) in enumerate(states[2:end])
+    display(GLMakie.Screen(),show_figure(s, com0_ml, com0_ol, ""))
+end
 
 
 

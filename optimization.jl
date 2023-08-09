@@ -196,6 +196,10 @@ println(res_over)
 # println(res_over.minimizer)
 # energy(res_over.minimizer)
 
+################
+# Show Results #
+################
+
 
 # Set combined geometry
 final_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
@@ -212,24 +216,3 @@ final_state[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = vec(δr_ol)  
 
 show_params(final_state)# Display final Structure and IR Spectra
 ipda, isda, ip, is = ir_spectra(νk, final_state, com0_ml, Δν)
-
-fig = Figure()
-ax = Axis
-    (fig[1, 1],
-        title = "A Makie Axis",
-        xlabel = "The x label",
-        ylabel = "The y label"
-    )
-
-ax = lines(νk, ipda)
-ml_spectra = lines!(νk, isda)
-
-ml_structure       = structure_unitmono(final_state, com0_ml, com0_ol)
-ml_structure1      = scatter3d(ml_structure, camera=(10,20,), label = nothing, ticks=nothing, axes=nothing,zlims =(0,7))
-combined_plot1     = scatter3d!(ml_structure,ml_structure1,layout=(1,2))
-combined_plot      = plot!(ml_spectra, combined_plot1, layout=(2,1), size = (700, 400), dpi = 1200)
-
-display(combined_plot)
-
-νk, ipda
-f

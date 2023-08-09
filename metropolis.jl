@@ -3,6 +3,7 @@ using LinearAlgebra
 using Printf
 using GLMakie
 
+# GLMakie.activate!()
 #########################
 # Pre-defined functions #
 #########################
@@ -105,45 +106,9 @@ println("Initial state:")
 println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol))
 
 # Display Structure and IR Spectra
-
-fig = Figure()
-ax_sp = Axis(fig[1, 1],
-            title = L"IR-Spectra (domain averaged) initial state$ $",
-            xlabel = L"Frequnecy / cm$^{-1}$",
-            ylabel = L"Intentsity / a.u.$ $")
-ax_st = LScene(fig[2, 1],limits = Rect(0,0,0,1,1,1))#, title = L"Structure$ $")
-
-ipda, isda, ip, is = ir_spectra(νk, initial_state, com0_ml, Δν)
-lines!(ax_sp, νk, ipda, color=:black, label="p-pol")
-lines!(ax_sp, νk, isda, color=:blue, label="s-pol")
-axislegend(ax_sp)
-
-#mesh!(fig[2,1], ml_C[1,1], ml_C[2,1], ml_C[3,1], markersize = 0.2, color=:black)
-ml_C, ml_O, ol_C, ol_O  = structure_unitmono(initial_state, com0_ml, com0_ol)
-meshscatter!(fig[2,1], ml_C[1,:], ml_C[2,:], ml_C[3,:], markersize = 0.2, color=:black)
-meshscatter!(fig[2,1], ml_O[1,:], ml_O[2,:], ml_O[3,:], markersize = 0.2, color=:red)
-#meshscatter!(fig[2,1], ol_C[1,:], ol_C[2,:], ol_C[3,:], markersize = 0.2, color=:black)
-#meshscatter!(fig[2,1], ol_O[1,:], ol_O[2,:], ol_O[3,:], markersize = 0.2, color=:red)
-r_Na, r_Cl = nacl_show()
-#meshscatter!( fig[2,1], r_Na[1,:], r_Na[2,:], r_Na[3,:], markersize = 0.1, color=:gray)
-#meshscatter!(fig[2,1], r_Cl[1,:], r_Cl[2,:], r_Cl[3,:], markersize = 0.3, color=:green)
-#xlims!(ax_st,-1.0, 1.0)
-#ylims!(ax2, -3.8, 3.8)
-#zlims!(ax2, -3.8, 3.8)
-
-
-display(fig)
-arnab
-
-ax = lines(fig,νk, ipda)
-ml_spectra = lines!(νk, isda)
-
-
-arnab
-ipda, isda, ip, is = ir_spectra(νk, initial_state, com0_ml, Δν)
-ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequnecy/cm-1",title="IR-Spectra (domain averaged) initial state")
-combined_plot = plot(ml_spectra, ml_structure, layout = (2, 1), size = (800, 800))
-display(combined_plot)
+fig = show_figure(initial_state, com0_ml, com0_ol, "Initial")
+# save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/initial.png", fig)
+# display(fig)
 
 
 #######################################################
@@ -162,42 +127,43 @@ display(combined_plot)
                                 # max_temperature::Float64, n_iterations::Int64 , 
                                 # nstep_thermalization::Int64, n_annealing_cycles::Int64)
 
+# fig2 = show_figure(res[1], com0_ml, com0_ol, "Final")
+# save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/final.png", fig2)
+# display(GLMakie.Screen(), fig2)
+
+# modified_states = []
+
+
+write_to_file("buried_ov_fixed_dof.txt", res)
+arnab
+
 Threads.@threads for i in 1:4
 
     println(Threads.threadid())
 
     modified_state = random_coords(initial_state,flgs,[π, 2*π, 0.5, 0.2])
-    
+    # push!(modified_state, modified_states)
+    # fig = show_figure(modified_state, com0_ml, com0_ol, "Ininal$i")
+    # save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/initial$i.png", show_figure(modified_state, com0_ml, com0_ol, "Ininal$i"))
+
     res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                                 δq, flgs, 
                                 0.4, 1000000.0, 100, 1, 2)
 
     println("file$i.txt")
 
+    # fig = show_figure(res[1], com0_ml, com0_ol, "Final$i")
+    # display(GLMakie.Screen(), fig)
+    # save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/Final$i.png", fig)
 end
 
-arnab
-## I am confused about where to put the printings and savings
+
+fig, ax, = scatter(res[4])
 
 
-display(plot(res[3], color = :black, label = " ", xlabel = "accepted steps", ylabel = "energy/cm-1")) # .- res[3][1]))
 # println(res[1])
 println(res[2])
 println(res[4])
-
-# Display final Structure and IR Spectra
-ml_structure = structure_unitmono(res[1], com0_ml, com0_ol)
-ipda, isda, ip, is = ir_spectra(νk, res[1], com0_ml, Δν)
-ml_spectra = plot(νk, [ipda isda], label=["p-pol" "s-pol"],xlabel = "Frequency/cm-1",title="IR-Spectra (domain averaged) final state", frame=:box)
-ml_structure1 = scatter3d(ml_structure, camera=(10,20,), label = nothing, ticks=nothing, axes=nothing,zlims =(0,7))
-combined_plot1 = scatter3d!(ml_structure,ml_structure1,layout=(1,2))
-combined_plot = plot(ml_spectra, combined_plot1, layout=(2,1), size = (700, 400), dpi = 1200)
-
-display(combined_plot)
-
-savefig(combined_plot, "test.pdf")
-savefig(combined_plot, "test.png")
-# energy(initial_state)
 
 println("The Final ML parameters are")
 show_params(res[1])
@@ -209,6 +175,6 @@ show_params(res[1])
 
 # ProfileView.view()
 
-# write_to_file("buried_ov_fixed_dof.txt", res)
+write_to_file("buried_ov_fixed_dof.txt", res)
 
 Plots.histogram(res[4])
