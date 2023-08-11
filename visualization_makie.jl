@@ -121,12 +121,12 @@ function show_figure(x::Vector{Float64}, lattice_ml::Matrix{Float64}, lattice_ol
 
         ax_st = LScene(fig0[3:5, 1], show_axis=false) #, title = L"Structure$ $") ,limits = Rect(0,0,0,1,1,1)
 
-        ipda, isda, ip, is = ir_spectra(νk, initial_state, lattice_ml, Δν)
+        ipda, isda, ip, is = ir_spectra(νk, x, lattice_ml, Δν)
         lines!(ax_sp, νk, ipda, color=:black, label=L"p-pol$ $")
         lines!(ax_sp, νk, isda, color=:blue,  label=L"s-pol$ $")
         axislegend(ax_sp, titlefont = "Times New Roman")
 
-        ml_C, ml_O, ol_C, ol_O  = structure_unitmono(initial_state, lattice_ml, lattice_ol)
+        ml_C, ml_O, ol_C, ol_O  = structure_unitmono(x, lattice_ml, lattice_ol)
         meshscatter!(ax_st, ml_C[:,1], ml_C[:,2], ml_C[:,3], markersize = 0.2, color=:black)#, limits = Rect(-1, -1, -1, 5, 5, 1))
         meshscatter!(ax_st, ml_O[:,1], ml_O[:,2], ml_O[:,3], markersize = 0.2, color=:red)
         if plot_ol==1
@@ -140,17 +140,20 @@ function show_figure(x::Vector{Float64}, lattice_ml::Matrix{Float64}, lattice_ol
         return fig0
 end
 
-function set_axis(fig, xlabel, ylabel)
+function set_axis(fig, xlabel, ylabel, ratio)
         ax = Axis(fig,
-                titlesize = 22,
+                titlesize = 22*ratio,
                 titlefont = "Times New Roman",
                 xlabel = xlabel,
                 ylabel = ylabel,
-                xlabelsize = 18, 
+                xlabelsize = 18*ratio,
                 xlabelfont = "Times New Roman",
                 ylabelfont = "Times New Roman",
-                ylabelsize = 18, 
+                ylabelsize = 18*ratio, 
                 xticklabelfont = "Times New Roman",
-                yticklabelfont = "Times New Roman")
-        return ax
+                yticklabelfont = "Times New Roman",
+                xticklabelsize = 16*ratio,
+                yticklabelsize = 16*ratio)
+
+                return ax
 end
