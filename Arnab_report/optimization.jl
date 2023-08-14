@@ -14,7 +14,7 @@ using Random
 using LinearAlgebra
 using Printf
 using Optim
-using Makie
+using GLMakie
 
 #########################
 # Pre-defined functions #
@@ -214,7 +214,8 @@ end
     com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
     # deviation vectors of molecular positions (r = com0 + δr)
     δr_ml = zeros(Float64,nmols_ml,3)
-
+    δr_ml[1 + 0*nmols_ml:1*nmols_ml] = repeat([0.5, 0.2, 0.2, 0.2], outer =nx*ny)   # δr
+    δr_ml[1 + 1*nmols_ml:2*nmols_ml] = repeat([0.5, 0.2, 0.2, 0.2], outer =nx*ny)
     # construct an overlayer
 
     # orientation of molecules in an overlayer's unit cell
@@ -255,7 +256,14 @@ end
     initial_state_all[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
     initial_state_all[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = vec(δr_ol)   # δr
 
+    initial_state_all[1 + 0*nmols_ml:2*nmols_ml] = initial_state
+    initial_state_all[1 + 2*nmols_ml:5*nmols_ml] = vec(δr_ml)   # δr
+    initial_state_all[ndofs_ml]                  = 10.0
 
+    fig_ini = show_figure(initial_state_all, com0_ml, com0_ol, "Ininal", 0)
+    display(fig_ini)
+
+    arnab
 ####################
 # Run optimization #
 ####################
@@ -267,8 +275,8 @@ Threads.@threads for i in 1:20
 
     modified_state = random_coords(initial_state, flgs, [π, 2*π])
 
-    δr_ml[1 + 0*nmols_ml:1*nmols_ml] = zeros(nmols_ml)#+[0.0, 0.0, 0.0, 0.0]   # δr
-    δr_ml[1 + 1*nmols_ml:2*nmols_ml] = zeros(nmols_ml)#+[0.0, 0.0, 0.0, 0.0]
+    # δr_ml[1 + 0*nmols_ml:1*nmols_ml] = zeros(nmols_ml)#+[0.0, 0.0, 0.0, 0.0]   # δr
+    # δr_ml[1 + 1*nmols_ml:2*nmols_ml] = zeros(nmols_ml)#+[0.0, 0.0, 0.0, 0.0]
     δr_ml[1 + 2*nmols_ml:3*nmols_ml] = fill(δz_ml, nmols_ml)   # δr
 
     initial_state_all[1 + 0*nmols_ml:2*nmols_ml] = modified_state
