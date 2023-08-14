@@ -214,8 +214,10 @@ end
     com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
     # deviation vectors of molecular positions (r = com0 + δr)
     δr_ml = zeros(Float64,nmols_ml,3)
-    δr_ml[1 + 0*nmols_ml:1*nmols_ml] = repeat([0.5, 0.2, 0.2, 0.2], outer =nx*ny)   # δr
-    δr_ml[1 + 1*nmols_ml:2*nmols_ml] = repeat([0.5, 0.2, 0.2, 0.2], outer =nx*ny)
+    δr_ml[1 + 0*nmols_ml:1*nmols_ml] = repeat([0.2, -0.2, 0.2,-0.2], outer =nx*ny)   # δr
+    δr_ml[1 + 1*nmols_ml:2*nmols_ml] = repeat([0.0, 0.0, 0.0, 0.0], outer =nx*ny)
+
+    
     # construct an overlayer
 
     # orientation of molecules in an overlayer's unit cell
