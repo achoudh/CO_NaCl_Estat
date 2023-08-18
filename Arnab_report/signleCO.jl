@@ -91,3 +91,12 @@ function optimize_function(initial_state::Vector{Float64}, lower::Vector{Float64
     
 end
 
+
+en_1 = [site_surface_interaction([0.16, 0.0, 0.84]*a0_surf, 30*degrees, i*degrees)[1]*joule2wn for i in [0, 45, 30]]
+
+
+en_1 = site_surface_interaction([0.0, 0.0, 0.84]*a0_surf, 30*degrees, 0*degrees)[1].*joule2wn
+en_2 = mol_surf_attr_arnab([0.0, 0.0, 0.84]*a0_surf, cos(30*degrees))*joule2wn
+
+println(sum(en_1)*joule2wn)
+println(en_2*joule2wn)

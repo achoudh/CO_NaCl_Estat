@@ -214,8 +214,8 @@ end
     com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
     # deviation vectors of molecular positions (r = com0 + δr)
     δr_ml = zeros(Float64,nmols_ml,3)
-    δr_ml[1 + 0*nmols_ml:1*nmols_ml] = repeat([0.5, 0.2, 0.2, 0.2], outer =nx*ny)   # δr
-    δr_ml[1 + 1*nmols_ml:2*nmols_ml] = repeat([0.5, 0.2, 0.2, 0.2], outer =nx*ny)
+    δr_ml[1 + 0*nmols_ml:1*nmols_ml] = repeat([0.16, -0.16, -0.16, -0.16], outer =nx*ny)   # δr
+    δr_ml[1 + 1*nmols_ml:2*nmols_ml] = repeat([0.0, 0.0, 0.0, 0.0], outer =nx*ny)
     # construct an overlayer
 
     # orientation of molecules in an overlayer's unit cell
@@ -261,17 +261,16 @@ end
     initial_state_all[ndofs_ml]                  = 10.0
 
     fig_ini = show_figure(initial_state_all, com0_ml, com0_ol, "Ininal", 0)
-    display(fig_ini)
+    # display(fig_ini)
 
-    arnab
 ####################
 # Run optimization #
 ####################
-for z in -0.4:0.05:0.4
-Threads.@threads for i in 1:20
-    println(Threads.threadid())
+# for z in -0.4:0.05:0.4
+# Threads.@threads for i in 1:20
+    # println(Threads.threadid())
     
-    global δz_ml, δz_ol = z, 10.0
+    global δz_ml, δz_ol = 0.0, 10.0
 
     modified_state = random_coords(initial_state, flgs, [π, 2*π])
 
@@ -298,7 +297,7 @@ en_final = Optim.minimum(res)
 # Set combined geometry
 final_state = deepcopy(initial_state_all)
 final_state[1 + 0*nmols_ml:2*nmols_ml] = res.minimizer     # θ
-write_to_file(joinpath(filepath, "3/x$z _$i.txt"), [[en_ini, en_final], [initial_state_all, final_state],[UInt8(Optim.converged(res))]]) 
+# write_to_file(joinpath(filepath, "3/x$z _$i.txt"), [[en_ini, en_final], [initial_state_all, final_state],[UInt8(Optim.converged(res))]]) 
 
 # fig_ini = show_figure(initial_state_all, com0_ml, com0_ol, "Ininal", 0)
 # fig_final = show_figure(final_state, com0_ml, com0_ol, "Final", 0)
