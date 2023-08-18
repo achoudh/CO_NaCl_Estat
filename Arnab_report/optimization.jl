@@ -309,5 +309,3 @@ final_state[1 + 0*nmols_ml:2*nmols_ml] = res.minimizer     # θ
 # show_params(initial_state_all)
 # println("Final energy: $en_final")
 # show_params(final_state)
-end
-end
