@@ -23,8 +23,12 @@ include("../constants.jl")
 # include("lattice_construction.jl")
 include("../visualization_makie.jl")
 # include("ir_spectra.jl")
-include("attraction_PES_arnab.jl")
+# include("attraction_PES_arnab.jl")
+include("./site_surface_3DMA.jl")
+include("./site_surface_arnab.jl")
+
 include("../simulated_annealing.jl")
+
 
 filepath = "C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results"
 
@@ -92,11 +96,20 @@ function optimize_function(initial_state::Vector{Float64}, lower::Vector{Float64
 end
 
 
-en_1 = [site_surface_interaction([0.16, 0.0, 0.84]*a0_surf, 30*degrees, i*degrees)[1]*joule2wn for i in [0, 45, 30]]
+theta = 0.0 * degrees
+phi = 0.0 * degrees
+stheta, sphi, costheta, cosphi = sin(theta), sin(0), cos(theta), cos(0)
+rvec = [0.0, 0.0, 0.84] * a0_surf
+vec = [stheta*cosphi, stheta*sphi, costheta]
+
+ml_o  = rvec + [v*stheta*cosphi, v*stheta*sphi, v*costheta]
+ml_c  = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
+ml_bc = rvec + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
 
 
-en_1 = site_surface_interaction([0.0, 0.0, 0.84]*a0_surf, 30*degrees, 0*degrees)[1].*joule2wn
-en_2 = mol_surf_attr_arnab([0.0, 0.0, 0.84]*a0_surf, cos(30*degrees))*joule2wn
+println(site_surface_interaction(rvec, theta, phi)[1]*joule2wn)
+println(mol_surf_attr_stone_tensor(ml_o, ml_c, ml_bc, vec)*joule2wn)
 
-println(sum(en_1)*joule2wn)
-println(en_2*joule2wn)
+
+
+
