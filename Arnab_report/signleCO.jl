@@ -96,20 +96,38 @@ function optimize_function(initial_state::Vector{Float64}, lower::Vector{Float64
 end
 
 
-theta = 0.0 * degrees
-phi = 0.0 * degrees
-stheta, sphi, costheta, cosphi = sin(theta), sin(0), cos(theta), cos(0)
-rvec = [0.0, 0.0, 0.84] * a0_surf
-vec = [stheta*cosphi, stheta*sphi, costheta]
-
-ml_o  = rvec + [v*stheta*cosphi, v*stheta*sphi, v*costheta]
-ml_c  = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
-ml_bc = rvec + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
-
-
-println(site_surface_interaction(rvec, theta, phi)[1]*joule2wn)
-println(mol_surf_attr_stone_tensor(ml_o, ml_c, ml_bc, vec)*joule2wn)
+function z_mono(x)
+    θ  = x[1]*pi/180
+    ml_in = zeros(Float64,3)
+    ml_in[3] = z0 * a0_surf
+   
+    # ml_in[1] = ml_in[1] - round(ml_in[1])
+    # ml_in[2] = ml_in[2] - round(ml_in[2])
+    
+    out = mol_surf_attr_stone_tensor()
+    return out[1]*joule2wn
+end
 
 
 
+zval = []
+pot = []
+initial = []
+final = []
 
+for z in 2.4:0.1:4.5
+    global z0 = z*1e-10/a0_surf
+    
+    x = zeros(Float64,1)
+    flgs = [1]
+    initial_state = random_coords(x, flgs, [π])
+    low, high = low_high_limits(initial_state, flgs)
+
+    push!(initial, initial_state)
+    res = optimize_function(initial_state, low, high, z_mono)
+    push!(pot, minimum(res))
+    push!(final, res.minimizer)
+    push!(zval, z)
+end
+
+writedlm(joinpath(filepath, "singleCO_multiz_optim.txt"), hcat([zval, vcat(initial...)./degrees, vcat(final...)./degrees, pot]...))

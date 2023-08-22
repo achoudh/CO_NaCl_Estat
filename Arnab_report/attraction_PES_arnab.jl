@@ -243,7 +243,7 @@ function site_surface_interaction(com::Vector{Float64}, theta1::Float64, phi1::F
     V_CO_NaCl = V_Q0_NaCl + V_Q1_NaCl + V_Q2_NaCl + V_Q3_NaCl
     # println(V_CO_NaCl*joule2wn,V_Q1_NaCl*joule2wn,  V_Q2_NaCl*joule2wn, V_Q3_NaCl*joule2wn)
 
-    return V_CO_NaCl, V_Q0_NaCl, V_Q1_NaCl, V_Q2_NaCl, V_Q3_NaCl, V_rep_surf 
+    return V_CO_NaCl, V_Q0_NaCl, V_Q1_NaCl, V_Q2_NaCl, V_Q3_NaCl
     
 end
 
