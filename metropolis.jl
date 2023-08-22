@@ -13,9 +13,7 @@ include("lattice_construction.jl")
 include("visualization_makie.jl")
 
 ## Turn on the interaction needed ##
-include("site_surface_interaction.jl")
-include("co_co_Guo.jl")
-# include("co_co_interactions.jl") 
+include("energy_cal_new.jl") 
 
 include("simulated_annealing.jl")
 include("ir_spectra.jl")
@@ -135,7 +133,7 @@ fig = show_figure(initial_state, com0_ml, com0_ol, "Initial")
 # modified_states = []
 
 
-write_to_file("buried_ov_fixed_dof.txt", res)
+# write_to_file("buried_ov_fixed_dof.txt", res)
 arnab
 
 Threads.@threads for i in 1:4
