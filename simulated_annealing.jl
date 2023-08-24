@@ -13,6 +13,7 @@ function new_coords(x::Vector{Float64}, δq::Vector{Float64}, flgs::Vector{Int32
     if f == 1 # θ-type coordinates
         x_new = mod(x_new, 2*pi)
         x_new = x_new > pi ?  2*pi - x_new : x_new
+        x_new = x_new > pi/2 ?  pi - x_new : x_new  
     elseif f == 2 # ϕ-type coordinates
         x_new = mod(x_new, 2*pi)
     elseif f == 3 # in-plane coordinates

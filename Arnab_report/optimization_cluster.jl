@@ -21,7 +21,6 @@ using Optim
 
 include("../constants.jl")
 include("../lattice_construction.jl")
-include("../visualization_makie.jl")
 include("../ir_spectra.jl")
 
 include("../co_co_Guo.jl")
@@ -110,24 +109,19 @@ vec_norm(x_new, x) = norm(x_new - x) / size(x, 1)
 ###################
 
 # Total energy (intra-monolayer + intra-overlayer + monolayer-Surface + overlayer-Surface + monolayer-overlayer )
-function energy(x::Vector{Float64}, initial_state::Vector{Float64}, flgs::Vector{Int64}, lattice_ml::Matrix{Float64}=com0_ml,
+function energy(x::Vector{Float64}, fixed_states::Vector{Float64}, lattice_ml::Matrix{Float64}=com0_ml,
              lattice_ol::Matrix{Float64}=com0_ol, ϕ_ol::Vector{Float64}=phi_ol, θ_ol::Vector{Float64}=theta_ol) 
-
-             
-    for (i, xi) in enumerate(x)
-        flgs[i] == 0
-        xi = initial_state[i]
-    end
 
     theta_ml = x[1+0*nmols_ml:1*nmols_ml]
     phi_ml   = x[1+1*nmols_ml:2*nmols_ml]
     δr_ml =    x[1+2*nmols_ml:5*nmols_ml]
-    δz_ol =    x[ndofs_ml]
-    theta_ol = x[1+ndofs_ml+0*nmols_ol2:ndofs_ml+1*nmols_ol2]
-    phi_ol   = x[1+ndofs_ml+1*nmols_ol2:ndofs_ml+2*nmols_ol2]
-    xy_ol    = x[1+ndofs_ml+2*nmols_ol2:ndofs_ml+4*nmols_ol2]
- 
-
+    
+	
+    theta_ol = fixed_states[1+0*nmols_ol2:1*nmols_ol2]
+    phi_ol   = fixed_states[1+1*nmols_ol2:2*nmols_ol2]
+    xy_ol    = fixed_states[1+2*nmols_ol2:4*nmols_ol2]
+	δz_ol =    fixed_states[1+4*nmols_ol2]
+	
     pot_mlml = Float64(0.0)
     for i in 1:nmols_ml-1, j in i+1:nmols_ml
         rvec12 = lattice_ml[i,:] - lattice_ml[j,:] + δr_ml[i:nmols_ml:end] - δr_ml[j:nmols_ml:end] 
@@ -233,13 +227,15 @@ end
     θ_uc = zeros(Float64, 4) + [30.0,30.0,30.0,30.0] * degrees
     ϕ_uc = zeros(Float64, 4) + [20.0,60.0,20.0,60.0] * degrees
     # monolayer-surface distance (reduced units)
-    z_ml = 4.5e-10/a0_surf
+    z_ml = 3.35e-10/a0_surf
     # get a monolayer molecules' reduced positions and orientation
     com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
     # deviation vectors of molecular positions (r = com0 + δr)
     δr_ml = zeros(Float64,nmols_ml,3)
     δr_ml[1 + 0*nmols_ml:1*nmols_ml] = repeat([0.16, -0.16, -0.16, -0.16], outer =nx*ny)   # δr
     δr_ml[1 + 1*nmols_ml:2*nmols_ml] = repeat([0.0, 0.0, 0.0, 0.0], outer =nx*ny)
+	#δr_ml[1 + 2*nmols_ml:3*nmols_ml] = fill()
+	
     # construct an overlayer
 
     # orientation of molecules in an overlayer's unit cell
@@ -253,62 +249,68 @@ end
     # deviation vectors of molecular positions (r = com0 + δr)
     δr_ol = zeros(Float64,nmols_ol2,2)
 
+
     ###########################
     # set up initial geometry #
     ###########################
-    flgs   = zeros(Int64, 5*nmols_ml+1+4*nmols_ol2)
 
-    # Set initial geometry
-    initial_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
-    # monolayer
+    # Set initial geometry for monolayer
+    initial_state = zeros(Float64, 5*nmols_ml)
     initial_state[1 + 0*nmols_ml:1*nmols_ml] = theta_ml     # θ
     initial_state[1 + 1*nmols_ml:2*nmols_ml] = phi_ml       # ϕ 
     initial_state[1 + 2*nmols_ml:5*nmols_ml] = vec(δr_ml)   # δr
-    initial_state[ndofs_ml]                  = 0.0          # overlayer height deviation from c.-of-m.
-    # overlayer
-    initial_state[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = theta_ol[1:nmols_ol2]    # θ
-    initial_state[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
-    initial_state[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = vec(δr_ol)   # δr
-    
-    
-    flgs[1 + 0*nmols_ml:1*nmols_ml]   = fill(1, nmols_ml)
-    flgs[1 + 1*nmols_ml:2*nmols_ml]   = fill(2, nmols_ml)
-    flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(3, 2*nmols_ml)
-    flgs[1 + 4*nmols_ml:5*nmols_ml]   = fill(4, nmols_ml) 
-    flgs[ndofs_ml]                    = 4 # adding the overlayer shift
-    flgs[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = fill(0, nmols_ol2)
-    flgs[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = fill(0, nmols_ol2)
-    flgs[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = fill(0, 2*nmols_ol2)
+#    initial_state[ndofs_ml]                  = 10.0          # overlayer height deviation from c.-of-m.
 
+    flgs = zeros(Int64, 5*nmols_ml)
+    flgs[1 + 0*nmols_ml:1*nmols_ml] = fill(1, nmols_ml)
+    flgs[1 + 1*nmols_ml:2*nmols_ml] = fill(2, nmols_ml)
+	flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(3, 2*nmols_ml)
+    flgs[1 + 4*nmols_ml:5*nmols_ml]   = fill(4, nmols_ml) 
+#    flgs[ndofs_ml]                    = 0 # adding the overlayer shift
+	
     # set the lower and upper limits
     lower, upper = low_high_limits(initial_state, flgs)
+
+    # overlayer
+    fixed_states = zeros(Float64, 1 + 5*nmols_ol2)
+    fixed_states[1 + 0*nmols_ol2 : 1*nmols_ol2] = theta_ol[1:nmols_ol2]    # θ
+    fixed_states[1 + 1*nmols_ol2 : 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
+	fixed_states[1 + 2*nmols_ol2 : 4*nmols_ol2] = vec(δr_ol)   # δr
+	fixed_states[1 + 4*nmols_ol2] = 10.0   # δz_ol fixed
+    
+	# Declaration of a state vector including all dof to match other programs
+    initial_state_all = zeros(Float64, ndofs_ml + 4*nmols_ol2)
+	initial_state_all[ndofs_ml] = fixed_states[1 + 4*nmols_ol2] 
+	initial_state_all[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = deepcopy(fixed_states[1 : 4*nmols_ol2]) 
+
+#    initial_state_all[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = theta_ol[1:nmols_ol2]    # θ
+#    initial_state_all[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
+#    initial_state_all[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = vec(δr_ol)   # δr
 
 
 ####################
 # Run optimization #
 ####################
-task_id = 1#Base.parse(Int, ENV["SLURM_ARRAY_TASK_ID"])
+task_id =  Base.parse(Int, ENV["SLURM_ARRAY_TASK_ID"])
 
 seed_num = 1234 + task_id
 Random.seed!(seed_num);
 
-    # global δz_ml, δz_ol = z, 10.0
+    #global δz_ml, δz_ol = 0.0, 0.0
 
     modified_state = random_coords(initial_state, flgs, [pi/3, 2*pi, 0.5, 0.25])
 
     if task_id == 1
         println("################################")
-
-        println("Jascha's mol-surf interaction is used")
-        println("But with 3 centered DMA")
-            
+		println("This is a full dimensional PES")
+        println("But with 3 centered DMA + NN")
         println("initial tilt angle is 0 to pi/3")	
-        println("Overlayer is $δz_ol")
-        println(δr_ml)
-        println("Optimization when the COM is moved towards next Na")
+
+        println("Overlayer is far and fixed")
+#        println(δr_ml)
+#        println("Optimization when the COM is moved towards next Na")
         println("################################")
     end
-
 
     g_tol = 1e-8
     x_tol = 1e-8
@@ -321,7 +323,11 @@ print(res)
 ################
 # Show Results #
 ################
-en_ini = energy(modified_state, initial_state, flgs)
+en_ini = energy(modified_state, fixed_states)
 en_final = Optim.minimum(res)
 
-# write_to_file(joinpath(filepath, "22-08-2023/1/x$z _$task_id.txt"), [[en_ini, en_final], [initial_state_all, final_state],[UInt8(Optim.converged(res))]]) 
+# Set combined geometry
+final_state = deepcopy(initial_state_all)
+final_state[1:5*nmols_ml] = res.minimizer     # θ
+
+write_to_file(joinpath(filepath, "24-08-2023/2/x$z _$task_id.txt"), [[en_ini, en_final], [initial_state_all, final_state],[UInt8(Optim.converged(res))]]) 
