@@ -26,7 +26,7 @@ include("../ir_spectra.jl")
 include("../co_co_Guo.jl")
 include("./site_surface_3DMA.jl")
 
-filepath = "C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results"
+#filepath = "C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results"
 
 #############
 # Functions #
@@ -287,11 +287,12 @@ end
 #    initial_state_all[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
 #    initial_state_all[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = vec(δr_ol)   # δr
 
+println(energy(initial_state, fixed_states))
 
 ####################
 # Run optimization #
 ####################
-task_id =  Base.parse(Int, ENV["SLURM_ARRAY_TASK_ID"])
+task_id =  1# Base.parse(Int, ENV["SLURM_ARRAY_TASK_ID"])
 
 seed_num = 1234 + task_id
 Random.seed!(seed_num);
@@ -316,7 +317,7 @@ Random.seed!(seed_num);
     x_tol = 1e-8
     f_tol = 1e-8
     inner_optimizer = LBFGS()
-    @time res = optimize(x -> energy(x, initial_state, flgs), lower, upper, modified_state, Fminbox(inner_optimizer), Optim.Options(g_tol=g_tol, x_tol=x_tol, f_tol=f_tol, iterations = 2000))
+    @time res = optimize(x -> energy(x, fixed_states), lower, upper, modified_state, Fminbox(inner_optimizer), Optim.Options(g_tol=g_tol, x_tol=x_tol, f_tol=f_tol, iterations = 2000))
 
 print(res)
 
@@ -330,4 +331,4 @@ en_final = Optim.minimum(res)
 final_state = deepcopy(initial_state_all)
 final_state[1:5*nmols_ml] = res.minimizer     # θ
 
-write_to_file(joinpath(filepath, "24-08-2023/2/x$z _$task_id.txt"), [[en_ini, en_final], [initial_state_all, final_state],[UInt8(Optim.converged(res))]]) 
+write_to_file(joinpath(filepath, "24-08-2023/2/x_$task_id.txt"), [[en_ini, en_final], [initial_state_all, final_state],[UInt8(Optim.converged(res))]]) 

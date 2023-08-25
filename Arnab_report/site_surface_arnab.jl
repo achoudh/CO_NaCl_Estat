@@ -134,7 +134,7 @@ function pot_deriv_lm(com1::Vector{Float64}, dxyz::Vector{Float64}, l::Int64, m:
     return (-1.0)^((l+m)/2) / sqrt_lm * cosderiv * expderiv / (1.0 + exp(-π*sqrt_lm))
 end
 
-function site_surface_interaction(com::Vector{Float64}, theta1::Float64, phi1::Float64)
+function site_surface_interaction(com::Vector{Float64}, e1z::Vector{Float64})
     
     # Return variables
     V_CO_NaCl = 0.0
@@ -146,9 +146,9 @@ function site_surface_interaction(com::Vector{Float64}, theta1::Float64, phi1::F
     com1::Vector{Float64} = rot*com
     
     # Orientation unit vector
-    stheta = sin(theta1)
-    e1z = [stheta*cos(phi1), stheta*sin(phi1), cos(theta1)]
-    #println(e1z)
+    # stheta = sin(theta1)
+    # e1z = [stheta*cos(phi1), stheta*sin(phi1), cos(theta1)]
+
     # Calculate multipole moments
     Q0, Q1, Q2, Q3 = multipole_components(v+w, e1z)
     #println(Q0,Q1,Q2,Q3)

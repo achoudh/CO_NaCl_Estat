@@ -55,6 +55,10 @@ function annealing_schedule(temp::Float64, cooling_rate::Float64)::Float64
     return temp * cooling_rate
 end
 
+function annealing_schedule(T0::Float64, α::Float64, k::Int64) ::Float64
+    return (T0 /(1+α*k^2))   
+end
+
 function simulated_annealing(initial_state::Vector{Float64}, lattice_ml, 
                              lattice_ol, phi_ol, theta_ol, trig_uc,
                                 δq::Vector{Float64}, flgs::Vector{Int32}, 
@@ -87,79 +91,79 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml,
         temp = max_temperature
     
         for tk::Int64 in 1:n_iterations # Loop over the iterations
+            for t_equi::Int64 in 1:nstep_thermalization
+                for i::Int64 in flex_dofs # Loop over DoFs
 
-            for i::Int64 in flex_dofs # Loop over DoFs
+                    if i < ndofs_ml # monolayer Dofs
 
-                if i < ndofs_ml # monolayer Dofs
+                        # Find a molecule to which ith DoF belongs
+                        imol = mod(i-1, nmols_ml) + 1
+                        #println((i, imol,current_energy))
+                        # Get the imol-th energy contribution
+                        current_energy_imol  = 
+                            energy_ml_single(current_state, lattice_ml, lattice_ol, phi_ol, theta_ol, imol)
+                        #println(current_energy_imol)
+                        #println(current_state)
+                        # Generate a new state
+                        new_state[i]         = new_coords(current_state, δq, flgs,i)
+                        new_energy_imol      = 
+                            energy_ml_single(new_state, lattice_ml, lattice_ol, phi_ol, theta_ol, imol)
+                        # Calculate the energy difference
+                        delta  = new_energy_imol - current_energy_imol
+                        #println(new_energy_imol)
+                        #println(new_state)
+                        #println(delta)
 
-                    # Find a molecule to which ith DoF belongs
-                    imol = mod(i-1, nmols_ml) + 1
-                    #println((i, imol,current_energy))
-                    # Get the imol-th energy contribution
-                    current_energy_imol  = 
-                        energy_ml_single(current_state, lattice_ml, lattice_ol, phi_ol, theta_ol, imol)
-                    #println(current_energy_imol)
-                    #println(current_state)
-                    # Generate a new state
-                    new_state[i]         = new_coords(current_state, δq, flgs,i)
-                    new_energy_imol      = 
-                        energy_ml_single(new_state, lattice_ml, lattice_ol, phi_ol, theta_ol, imol)
-                    # Calculate the energy difference
-                    delta  = new_energy_imol - current_energy_imol
-                    #println(new_energy_imol)
-                    #println(new_state)
-                    #println(delta)
+                    elseif i == ndofs_ml # Get the overlayer interaction w.r.t. δz_ol
 
-                elseif i == ndofs_ml # Get the overlayer interaction w.r.t. δz_ol
+                        # Get the δz_ol energy contribution
+                        current_energy_imol  = 
+                            energy_ol_δz(current_state, lattice_ml, lattice_ol, phi_ol, theta_ol)
+                        # Generate a new state
+                        new_state[i]         = new_coords(current_state, δq, flgs,i)
+                        new_energy_imol      = 
+                            energy_ol_δz(new_state, lattice_ml, lattice_ol, phi_ol, theta_ol)
+                        # Calculate the energy difference
+                        delta  = new_energy_imol - current_energy_imol
 
-                    # Get the δz_ol energy contribution
-                    current_energy_imol  = 
-                        energy_ol_δz(current_state, lattice_ml, lattice_ol, phi_ol, theta_ol)
-                    # Generate a new state
-                    new_state[i]         = new_coords(current_state, δq, flgs,i)
-                    new_energy_imol      = 
-                        energy_ol_δz(new_state, lattice_ml, lattice_ol, phi_ol, theta_ol)
-                    # Calculate the energy difference
-                    delta  = new_energy_imol - current_energy_imol
-
-                else
-                    # Find a molecule to which ith DoF belongs
-                    imol = mod(i-1-ndofs_ml, nmols_ol2) + 1
-                    #println((i, imol,current_energy))
-                    # Get the imol-th energy contribution
-                    current_energy_imol  = 
-                        energy_ol_single(current_state, lattice_ml, lattice_ol, phi_ol, theta_ol, imol)
-                    #println(current_energy_imol)
-                    #println(current_state)
-                    # Generate a new state
-                    new_state[i]         = new_coords(current_state, δq, flgs,i)
-                    new_energy_imol      = 
-                        energy_ol_single(new_state, lattice_ml, lattice_ol, phi_ol, theta_ol, imol)
-                    # Calculate the energy difference
-                    delta  = new_energy_imol - current_energy_imol
-                    #println(new_energy_imol)
-                    #println(new_state)
-                    #println(delta)
-                end
-                
-                # Decide whether to accept the new state
-                if delta <= 0 || rand() < acceptance_probability(delta, temp)
-                    current_state[i] = new_state[i]
-                    current_energy = current_energy + delta
-                    push!(accepted_step_energies, current_energy)
-                else
-                    new_state[i] = current_state[i]
-                end
-                
-                # Update the best state if necessary
-                if current_energy < best_energy
-                    best_state[:] = current_state[:]
-                    best_energy = current_energy
+                    else
+                        # Find a molecule to which ith DoF belongs
+                        imol = mod(i-1-ndofs_ml, nmols_ol2) + 1
+                        #println((i, imol,current_energy))
+                        # Get the imol-th energy contribution
+                        current_energy_imol  = 
+                            energy_ol_single(current_state, lattice_ml, lattice_ol, phi_ol, theta_ol, imol)
+                        #println(current_energy_imol)
+                        #println(current_state)
+                        # Generate a new state
+                        new_state[i]         = new_coords(current_state, δq, flgs,i)
+                        new_energy_imol      = 
+                            energy_ol_single(new_state, lattice_ml, lattice_ol, phi_ol, theta_ol, imol)
+                        # Calculate the energy difference
+                        delta  = new_energy_imol - current_energy_imol
+                        #println(new_energy_imol)
+                        #println(new_state)
+                        #println(delta)
+                    end
+                    
+                    # Decide whether to accept the new state
+                    if delta <= 0 || rand() < acceptance_probability(delta, temp)
+                        current_state[i] = new_state[i]
+                        current_energy = current_energy + delta
+                        push!(accepted_step_energies, current_energy)
+                    else
+                        new_state[i] = current_state[i]
+                    end
+                    
+                    # Update the best state if necessary
+                    if current_energy < best_energy
+                        best_state[:] = current_state[:]
+                        best_energy = current_energy
+                    end
                 end
             end
-
             # Update the temperature
-            temp = annealing_schedule(temp, cooling_rate)
+            temp = annealing_schedule(max_temperature, cooling_rate, tk)
         end
 
         push!(int_min, best_energy)

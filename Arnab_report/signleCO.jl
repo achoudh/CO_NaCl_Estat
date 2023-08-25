@@ -13,7 +13,7 @@ using Random
 using LinearAlgebra
 using Printf
 using Optim
-using GLMakie
+using CairoMakie
 
 #################
 # Load programs #
@@ -24,7 +24,7 @@ include("../constants.jl")
 include("../visualization_makie.jl")
 # include("ir_spectra.jl")
 # include("attraction_PES_arnab.jl")
-include("./site_surface_3DMA.jl")
+# include("./site_surface_3DMA.jl")
 include("./site_surface_arnab.jl")
 
 include("../simulated_annealing.jl")
@@ -96,38 +96,79 @@ function optimize_function(initial_state::Vector{Float64}, lower::Vector{Float64
 end
 
 
-function z_mono(x)
-    θ  = x[1]*pi/180
-    ml_in = zeros(Float64,3)
-    ml_in[3] = z0 * a0_surf
-   
-    # ml_in[1] = ml_in[1] - round(ml_in[1])
-    # ml_in[2] = ml_in[2] - round(ml_in[2])
+function z_mono(x::Vector{Float64}, rvec::Vector{Float64})
+    θ = x[1]*degrees
+    ϕ = x[2]*degrees
+
+    rvec[1] = rvec[1] - round(rvec[1])
+    rvec[2] = rvec[2] - round(rvec[2])
     
-    out = mol_surf_attr_stone_tensor()
-    return out[1]*joule2wn
+    rvec *= a0_surf
+
+    stheta, sphi, costheta, cosphi = sin(θ), sin(ϕ), cos(θ), cos(ϕ)
+    unit_vec = [stheta*cosphi, stheta*sphi, costheta]
+
+    ml_o  = rvec + [v*stheta*cosphi, v*stheta*sphi, v*costheta]
+    ml_c  = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
+    
+    out = site_surface_interaction(ml_in, unit_vec)[1] + mol_surf_rep_stone(ml_o, ml_c, 4)
+    return out*joule2wn
+
 end
 
 
 
 zval = []
-pot = []
-initial = []
-final = []
+xval = collect(-5:0.1:5)
+yval = collect(-5:0.1:5)
+z = 3.35*1e-10/a0_surf
 
-for z in 2.4:0.1:4.5
-    global z0 = z*1e-10/a0_surf
-    
-    x = zeros(Float64,1)
-    flgs = [1]
-    initial_state = random_coords(x, flgs, [π])
+
+pot = zeros(Float64,size(xval,1),size(yval,1))
+initial = zeros(Float64,size(xval,1),size(yval,1),2)
+final = zeros(Float64,size(xval,1),size(yval,1),2)
+
+
+ml_in = zeros(Float64,3)
+
+for (i,x) in enumerate(xval)
+for (j,y) in enumerate(xval)
+
+    ml_in[1] = x
+    ml_in[2] = y
+    ml_in[3] = z
+
+    xini = zeros(Float64,2)
+    flgs = [1,2]
+
+    initial_state = random_coords(xini, flgs, [π, 2π])
     low, high = low_high_limits(initial_state, flgs)
+    
+    initial[i,j,:] = initial_state
 
-    push!(initial, initial_state)
-    res = optimize_function(initial_state, low, high, z_mono)
-    push!(pot, minimum(res))
-    push!(final, res.minimizer)
-    push!(zval, z)
+    g_tol = 1e-8
+    x_tol = 1e-8
+    f_tol = 1e-8
+    
+    inner_optimizer = LBFGS()
+    res = optimize(x->z_mono(x, ml_in), low, high, initial_state, Fminbox(inner_optimizer), 
+            Optim.Options(g_tol=g_tol, x_tol=x_tol, f_tol=f_tol, iterations = 2000))
+    
+    pot[i,j] = minimum(res)
+    final[i,j,:] = res.minimizer
+    # push!(zval, z)
 end
+end 
 
-writedlm(joinpath(filepath, "singleCO_multiz_optim.txt"), hcat([zval, vcat(initial...)./degrees, vcat(final...)./degrees, pot]...))
+#writedlm(joinpath(filepath, "singleCO_multiz_optim.txt"), hcat([zval, vcat(initial...)./degrees, vcat(final...)./degrees, pot]...))
+display(heatmap(xval, yval, pot))
+
+
+display(heatmap(xval, yval, final[:,:,1]))
+
+final ./degrees
+
+stheta, costheta = sin(final[:,:,1]), cos.(final[:,:,1])
+sphi, cosphi = sin(final[:,:,2]), cos.(final[:,:,2])
+unit_vec = [stheta.*cosphi, stheta.*sphi, costheta]
+
