@@ -59,6 +59,7 @@ function annealing_schedule2(T0::Float64, α::Float64, k::Int64)::Float64
     return (T0 /(1+α*k^2))   
 end
 
+
 function simulated_annealing(initial_state::Vector{Float64}, lattice_ml, 
                              lattice_ol, phi_ol, theta_ol, trig_uc,
                                 δq::Vector{Float64}, flgs::Vector{Int32}, 
