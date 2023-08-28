@@ -51,11 +51,11 @@ end
 
 acceptance_probability(delta::Float64, T::Float64)::Float64 = exp(-delta/T)
 
-function annealing_schedule(temp::Float64, cooling_rate::Float64)::Float64
-    return temp * cooling_rate
+function annealing_schedule(T0::Float64, α::Float64, k::Int64)::Float64
+    return T0 * k^t
 end
 
-function annealing_schedule(T0::Float64, α::Float64, k::Int64) ::Float64
+function annealing_schedule2(T0::Float64, α::Float64, k::Int64)::Float64
     return (T0 /(1+α*k^2))   
 end
 
@@ -73,7 +73,7 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml,
     new_state = deepcopy(initial_state)
 
     int_min::Vector{Float64} = [current_energy] # Intermediate minimums or best energies
-    accepted_step_energies::Vector{Float64} = [current_energy] # Energies at the accepted states
+    step_energies::Vector{Float64} = [current_energy] # Energies at the accepted states
  
     # Initialize the best state
     best_state = deepcopy(initial_state)
@@ -150,7 +150,7 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml,
                     if delta <= 0 || rand() < acceptance_probability(delta, temp)
                         current_state[i] = new_state[i]
                         current_energy = current_energy + delta
-                        push!(accepted_step_energies, current_energy)
+                        #push!(accepted_step_energies, current_energy)
                     else
                         new_state[i] = current_state[i]
                     end
@@ -161,13 +161,15 @@ function simulated_annealing(initial_state::Vector{Float64}, lattice_ml,
                         best_energy = current_energy
                     end
                 end
+                push!(step_energies, current_energy)
+
             end
             # Update the temperature
-            temp = annealing_schedule(max_temperature, cooling_rate, tk)
+            temp = annealing_schedule2(max_temperature, cooling_rate, tk)
         end
 
         push!(int_min, best_energy)
         push!(all_best_states, best_state)
     end
-    return int_min, all_best_states, accepted_step_energies # Removed "best_state, best_energy" as the int_min and all_best_states already includes initial_state and all
+    return int_min, all_best_states, step_energies # Removed "best_state, best_energy" as the int_min and all_best_states already includes initial_state and all
 end
