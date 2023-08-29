@@ -115,29 +115,25 @@ Random.seed!(seed_num);
 # Set step sizes
 
 if task_id == 1
-println("################################")
 println("initial tilt angle is 0 to pi")
+println("The simulation is only run so that final structure is only C-down")
+println("overlayer is far and fixed")
 println("annealing parameters")
-println("0.4, 1000000.0, 800, 1, 10")
-println("Check is the inclreasing steps helps")
-println("################################")	
+println("0.1, 10000.0, 600, 10, 10")
+println("Introducing new colling mechanism and turning on the theramlization")
 end
 
 
-# Threads.@threads for i in 1:4
+modified_state = random_coords(initial_state,flgs,[pi/2, 2*pi, 0.5, 0.2])
 
-    # println(Threads.threadid())
+println(task_id, energy(modified_state,com0_ml,com0_ol, phi_ol, theta_ol))    
 
-    modified_state = random_coords(initial_state,flgs,[pi/2, 2*pi, 0.5, 0.2])
-
-	println(task_id, energy(modified_state,com0_ml,com0_ol, phi_ol, theta_ol))    
-	
-	res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
-                                δq, flgs, 
-                                0.4, 1000000.0, 800, 1, 10) ## The thermalization loop does not matter
+res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
+                            δq, flgs, 
+                            0.4, 1000000.0, 800, 1, 10) ## The thermalization loop does not matter
 
 
-	write_to_file("./Output/22-08-2023/2/buried_ov_fixed_dof_$task_id.txt", res)
+write_to_file("./Output/22-08-2023/2/buried_ov_fixed_dof_$task_id.txt", res)
 
 
 
