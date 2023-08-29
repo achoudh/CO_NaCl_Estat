@@ -68,12 +68,12 @@ s0_nn = 7
 s1_nn = 45
 s2_nn = 45
 
-w1_nn::Matrix{Float64} = transpose(readdlm(".//w1.txt"))
-w2_nn::Matrix{Float64} = transpose(readdlm(".//w2.txt"))
-b1_nn::Matrix{Float64} = readdlm(".//b1.txt")
-b2_nn::Matrix{Float64} = readdlm(".//b2.txt")
-w3_nn::Matrix{Float64} = readdlm(".//w3.txt")
-rg_nn::Matrix{Float64} = transpose(readdlm(".//rg.txt"))
+w1_nn::Matrix{Float64} = transpose(readdlm("w1.txt"))
+w2_nn::Matrix{Float64} = transpose(readdlm("w2.txt"))
+b1_nn::Matrix{Float64} = readdlm("b1.txt")
+b2_nn::Matrix{Float64} = readdlm("b2.txt")
+w3_nn::Matrix{Float64} = readdlm("w3.txt")
+rg_nn::Matrix{Float64} = transpose(readdlm("rg.txt"))
 vg_nn::Vector{Float64} = [-702.59000000000003, 22446.305300000000]
 b3_nn::Float64 = 2.6335296521641700
 
