@@ -125,6 +125,9 @@ function show_figure(x::Vector{Float64}, lattice_ml::Matrix{Float64}, lattice_ol
         lines!(ax_sp, νk, ipda, color=:black, label=L"p-pol$ $")
         lines!(ax_sp, νk, isda, color=:blue,  label=L"s-pol$ $")
         axislegend(ax_sp, titlefont = "Times New Roman")
+		r_Na, r_Cl = nacl_show()
+        meshscatter!(ax_st, r_Na[1,:], r_Na[2,:], r_Na[3,:], markersize = 0.1, color=:gray)
+        meshscatter!(ax_st, r_Cl[1,:], r_Cl[2,:], r_Cl[3,:], markersize = 0.3, color=:green)
 
         ml_C, ml_O, ol_C, ol_O  = structure_unitmono(x, lattice_ml, lattice_ol)
         meshscatter!(ax_st, ml_C[:,1], ml_C[:,2], ml_C[:,3], markersize = 0.2, color=:black)#, limits = Rect(-1, -1, -1, 5, 5, 1))
@@ -134,9 +137,7 @@ function show_figure(x::Vector{Float64}, lattice_ml::Matrix{Float64}, lattice_ol
                 meshscatter!(ax_st, ol_O[:,1], ol_O[:,2], ol_O[:,3], markersize = 0.2, color=(:red, 0.3))#, transparency = true)
         end
 
-        r_Na, r_Cl = nacl_show()
-        meshscatter!(ax_st, r_Na[1,:], r_Na[2,:], r_Na[3,:], markersize = 0.1, color=:gray)
-        meshscatter!(ax_st, r_Cl[1,:], r_Cl[2,:], r_Cl[3,:], markersize = 0.3, color=:green)
+        
         return fig0
 end
 

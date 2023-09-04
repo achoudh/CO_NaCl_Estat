@@ -1,16 +1,15 @@
 using Random
 using LinearAlgebra
 using Printf
-using GLMakie
 
-# GLMakie.activate!()
 #########################
 # Pre-defined functions #
 #########################
 
 include("constants.jl")
 include("lattice_construction.jl")
-include("visualization_makie.jl")
+#include("visualization_makie.jl")
+include("write_to_file.jl")
 
 ## Turn on the interaction needed ##
 include("energy_cal_new.jl") 
@@ -22,19 +21,27 @@ include("ir_spectra.jl")
 # Initialization #
 ##################
 
-Random.seed!(1234);
+####################################
+# Current update                   #
+# Steps and initial conditions are #
+# limited to only have the C-down  #
+####################################
+
 
 # construct a monolayer
 
 # orientation of molecules in a monolayer's unit cell
-θ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees #[30.0,30.0,30.0,30.0]
-ϕ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees #[20.0,60.0,20.0,60.0]
+θ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees +[24.0,24.0,24.0,24.0] .* degrees
+ϕ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees +[360.0,360.0,180.0,180.0] .* degrees
 # monolayer-surface distance (reduced units)
 z_ml = 3.35e-10/a0_surf
 # get a monolayer molecules' reduced positions and orientation
 com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
 # deviation vectors of molecular positions (r = com0 + δr)
 δr_ml = zeros(Float64,nmols_ml,3)
+δr_ml[1 + 0*nmols_ml:1*nmols_ml] = repeat([0.16, 0.16, -0.16, -0.16], outer =nx*ny)   # δr
+δr_ml[1 + 1*nmols_ml:2*nmols_ml] = repeat([0.0, 0.0, 0.0, 0.0], outer =nx*ny)
+δr_ml[1 + 2*nmols_ml:3*nmols_ml] = fill(-0.03/3.99, nmols_ml)
 
 # construct an overlayer
 
@@ -63,7 +70,7 @@ initial_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
 initial_state[1 + 0*nmols_ml:1*nmols_ml] = theta_ml     # θ
 initial_state[1 + 1*nmols_ml:2*nmols_ml] = phi_ml       # ϕ 
 initial_state[1 + 2*nmols_ml:5*nmols_ml] = vec(δr_ml)   # δr
-initial_state[ndofs_ml]                  = 0.0          # overlayer height deviation from c.-of-m.
+initial_state[ndofs_ml]                  = 10.0          # overlayer height deviation from c.-of-m.
 # overlayer
 initial_state[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = theta_ol[1:nmols_ol2]    # θ
 initial_state[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
@@ -94,85 +101,44 @@ flgs[1 + 0*nmols_ml:1*nmols_ml]   = fill(1, nmols_ml)
 flgs[1 + 1*nmols_ml:2*nmols_ml]   = fill(2, nmols_ml)
 flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(3, 2*nmols_ml)
 flgs[1 + 4*nmols_ml:5*nmols_ml]   = fill(4, nmols_ml) 
-flgs[ndofs_ml]                    = 4 # adding the overlayer shift
+flgs[ndofs_ml]                    = 0 # adding the overlayer shift
 flgs[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = fill(0, nmols_ol2)
 flgs[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = fill(0, nmols_ol2)
 flgs[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = fill(0, 2*nmols_ol2)
 
+println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol)  )
 
-println("Initial state:")
-#println(initial_state)
-println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol))
-
-# Display Structure and IR Spectra
-fig = show_figure(initial_state, com0_ml, com0_ol, "Initial")
-# save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/initial.png", fig)
-# display(fig)
-
-
+arnab
 #######################################################
 # Run simulation with randomly modified initial_state #
 #######################################################
+task_id = Base.parse(Int, ENV["SLURM_ARRAY_TASK_ID"])
 
+seed_num = 1234 + task_id
+Random.seed!(seed_num);
 
 # Set step sizes
 
-@time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
-                                δq, flgs, 
-                                0.4, 1000000.0, 100, 1, 2)
-                                # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
-                                # δq::Vector{Float64}, flgs::Vector{Int32}, 
-                                # cooling_rate::Float64, 
-                                # max_temperature::Float64, n_iterations::Int64 , 
-                                # nstep_thermalization::Int64, n_annealing_cycles::Int64)
-
-# fig2 = show_figure(res[1], com0_ml, com0_ol, "Final")
-# save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/final.png", fig2)
-# display(GLMakie.Screen(), fig2)
-
-# modified_states = []
-
-
-# write_to_file("buried_ov_fixed_dof.txt", res)
-
-Threads.@threads for i in 1:4
-
-    println(Threads.threadid())
-
-    modified_state = random_coords(initial_state,flgs,[π, 2*π, 0.5, 0.2])
-    # push!(modified_state, modified_states)
-    # fig = show_figure(modified_state, com0_ml, com0_ol, "Ininal$i")
-    # save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/initial$i.png", show_figure(modified_state, com0_ml, com0_ol, "Ininal$i"))
-
-    res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
-                                δq, flgs, 
-                                0.4, 1000000.0, 100, 1, 2)
-
-    println("file$i.txt")
-
-    # fig = show_figure(res[1], com0_ml, com0_ol, "Final$i")
-    # display(GLMakie.Screen(), fig)
-    # save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/Final$i.png", fig)
+if task_id == 1
+println("initial tilt angle is 0 to pi")
+println("The simulation is only run so that final structure is only C-down")
+println("overlayer is far and fixed")
+println("annealing parameters")
+println("0.1, 10000.0, 600, 10, 10")
+println("Introducing new colling mechanism and turning on the theramlization")
 end
 
 
-fig, ax, = scatter(res[4])
+modified_state = random_coords(initial_state,flgs,[pi/2, 2*pi, 0.5, 0.2])
+
+println(task_id, energy(modified_state,com0_ml,com0_ol, phi_ol, theta_ol))    
+
+res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
+                            δq, flgs, 
+                            0.4, 1000000.0, 800, 1, 10) ## The thermalization loop does not matter
 
 
-# println(res[1])
-println(res[2])
-println(res[4])
-
-println("The Final ML parameters are")
-show_params(res[1])
-
-# using Profile , ProfileView
-
-# @profile simulated_annealing(initial_state, 30, 0.5)
+write_to_file("./Output/22-08-2023/2/buried_ov_fixed_dof_$task_id.txt", res)
 
 
-# ProfileView.view()
 
-write_to_file("buried_ov_fixed_dof.txt", res)
-
-Plots.histogram(res[4])

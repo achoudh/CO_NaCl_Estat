@@ -28,7 +28,7 @@ nmols_uc::Int64 = 4
 nmols_ucol::Int64 = 8
 nx::Int64 = 2
 ny::Int64 = 2
-nz::Int64 = 1
+nz::Int64 = 2
 
 nmols_ml::Int64 = nmols_uc*nx*ny
 nmols_ol::Int64 = nmols_ucol*nx*ny*nz
