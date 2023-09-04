@@ -2,14 +2,14 @@ using LinearAlgebra
 
 ######################################
 # CO-NaCl electrostatic              #
-# 3 centered DMA                     #
+# 2 centered DMA from Hoang et al.   #
 # Buckingham style field interaction #
 ######################################
+
 
 # Three center multipole moments obtained from Meredith
 mom_C::Vector{Float64} = [0.18314*e, 0.33842*di_au, -0.90316*qu_au, -0.25179*oc_au, 0.13324*hx_au]
 mom_O::Vector{Float64} = [-0.02320*e, -0.29304*di_au, 0.09203*qu_au, -0.09083*oc_au, -0.02669*hx_au]
-mom_BC::Vector{Float64} = [-0.15994*e, 0.34962*di_au, 0.49745*qu_au, 0.45488*oc_au, 0.33552*hx_au]
 
 # All constants below are reported as alpha0, alpha1, ro0, ro1, ro2
 c_na_rep::Vector{Float64} = [4.5036e10, 0.4343e10, 2.9090e-10, -0.0636e-10, 0.0488e-10]
@@ -22,6 +22,7 @@ K_stone::Float64 = 4.3597482e-21
 # Dispersion coefficients
 # [ [C-Na, O-Na], [C-Cl, O-Cl] ]
 disp_coef::Matrix{Float64} = [ [383.3 256.6]; [3935.9 2633.0] ]/6.02214076*1e-80 
+
 
 
 function multipole_components(R::Float64, e1z::Array{Float64, 1}, mom::Vector{Float64})
@@ -172,11 +173,10 @@ function site_surface_interaction(com::Vector{Float64}, unit_vec::Vector{Float64
     
 end
 
-function mol_surf_attr_stone_tensor(com_o::Vector{Float64}, com_c::Vector{Float64}, com_bc::Vector{Float64}, unit_vec::Vector{Float64})::Float64
+function mol_surf_attr_hoang_tensor(com_o::Vector{Float64}, com_c::Vector{Float64}, com_bc::Vector{Float64}, unit_vec::Vector{Float64})::Float64
     
     return site_surface_interaction(com_o, unit_vec, mom_O)[1] + 
-    site_surface_interaction(com_c, unit_vec, mom_C)[1] + 
-    site_surface_interaction(com_bc, unit_vec, mom_BC)[1]
+    site_surface_interaction(com_c, unit_vec, mom_C)[1] 
 end
 
 
