@@ -7,7 +7,7 @@ using LinearAlgebra
 ######################################
 
 
-# Three center multipole moments obtained from Meredith
+# Two center multipole moments obtained from Meredith
 mom_C::Vector{Float64} = [0.18314*e, 0.33842*di_au, -0.90316*qu_au, -0.25179*oc_au, 0.13324*hx_au]
 mom_O::Vector{Float64} = [-0.02320*e, -0.29304*di_au, 0.09203*qu_au, -0.09083*oc_au, -0.02669*hx_au]
 
@@ -56,17 +56,17 @@ function multipole_components(R::Float64, e1z::Array{Float64, 1}, mom::Vector{Fl
         end
     end
 
-    # Octapole moments
-    for i in 1:3
-        for j in 1:3
-            for k in 1:3
-                Q3[i, j, k] = octapole * (5.0 * e1z[i] * e1z[j] * e1z[k] - e1z[i] * (j == k) -
-                                          e1z[j] * (k == i) - e1z[k] * (i == j)) * 0.5
-            end
-        end
-    end
+    # # Octapole moments
+    # for i in 1:3
+    #     for j in 1:3
+    #         for k in 1:3
+    #             Q3[i, j, k] = octapole * (5.0 * e1z[i] * e1z[j] * e1z[k] - e1z[i] * (j == k) -
+    #                                       e1z[j] * (k == i) - e1z[k] * (i == j)) * 0.5
+    #         end
+    #     end
+    # end
 
-    return Q0, Q1, Q2, Q3
+    return Q0, Q1, Q2 #, Q3
 end
 
 function pot_deriv_lm(com1::Vector{Float64}, dxyz::Vector{Float64}, l::Int64, m::Int64)::Float64
@@ -110,7 +110,7 @@ function site_surface_interaction(com::Vector{Float64}, unit_vec::Vector{Float64
 
     #println(e1z)
     # Calculate multipole moments
-    Q0, Q1, Q2, Q3 = multipole_components(v+w, e1z, mom)
+    Q0, Q1, Q2 = multipole_components(v+w, e1z, mom)
     #println(Q0,Q1,Q2,Q3)
     # Calculate electric field and its derivatives
     potfactor = eps_NaCl/a0_NaCl
@@ -135,14 +135,14 @@ function site_surface_interaction(com::Vector{Float64}, unit_vec::Vector{Float64
         phiab[k1, k2] -= potfactor*pot_deriv_lm(com1, dxyz, lodd[i], modd[i])
         end
 
-        # Electric field hypergradient
-        for k1 = 1:3, k2 = 1:3, k3 = 1:3
-        dxyz = zeros(3)
-        dxyz[k1] += 1
-        dxyz[k2] += 1
-        dxyz[k3] += 1
-        phiabc[k1, k2, k3] -= potfactor*pot_deriv_lm(com1, dxyz, lodd[i], modd[i])
-        end
+        # # Electric field hypergradient
+        # for k1 = 1:3, k2 = 1:3, k3 = 1:3
+        # dxyz = zeros(3)
+        # dxyz[k1] += 1
+        # dxyz[k2] += 1
+        # dxyz[k3] += 1
+        # phiabc[k1, k2, k3] -= potfactor*pot_deriv_lm(com1, dxyz, lodd[i], modd[i])
+        # end
     end
 
     V_Q0_NaCl = Q0*phi[1]
@@ -159,17 +159,17 @@ function site_surface_interaction(com::Vector{Float64}, unit_vec::Vector{Float64
         V_Q2_NaCl -= Q2[k1,k2]*phiab[k1,k2]/3.0
     end
 
-    # octapole-second gradient interaction
-    V_Q3_NaCl = 0.0
-    for k1 in 1:3, k2 in 1:3, k3 in 1:3
-        V_Q3_NaCl -= Q3[k1,k2,k3]*phiabc[k1,k2,k3]/15.0
-    end
+    # # octapole-second gradient interaction
+    # V_Q3_NaCl = 0.0
+    # for k1 in 1:3, k2 in 1:3, k3 in 1:3
+    #     V_Q3_NaCl -= Q3[k1,k2,k3]*phiabc[k1,k2,k3]/15.0
+    # end
 
     # Total CO-NaCl interaction energy is
-    V_CO_NaCl = V_Q0_NaCl + V_Q1_NaCl + V_Q2_NaCl + V_Q3_NaCl
+    V_CO_NaCl = V_Q0_NaCl + V_Q1_NaCl + V_Q2_NaCl # + V_Q3_NaCl
     # println(V_CO_NaCl*joule2wn,V_Q1_NaCl*joule2wn,  V_Q2_NaCl*joule2wn, V_Q3_NaCl*joule2wn)
 
-    return V_CO_NaCl, V_Q0_NaCl, V_Q1_NaCl, V_Q2_NaCl, V_Q3_NaCl
+    return V_CO_NaCl, V_Q0_NaCl, V_Q1_NaCl, V_Q2_NaCl #, V_Q3_NaCl
     
 end
 

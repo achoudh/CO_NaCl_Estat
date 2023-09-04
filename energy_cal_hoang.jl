@@ -4,6 +4,9 @@
 # required tensor multiplication             #
 ##############################################
 
+include("Arnab_report/site_surface_2DMA.jl")
+include("Arnab_report/hoang_interactions.jl")
+
 
 # Total energy (intra-monolayer + intra-overlayer + monolayer-Surface + overlayer-Surface + monolayer-overlayer )
 function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol) 
