@@ -12,10 +12,10 @@ sig_cc = 3.56379e-10 # (m)
 # sig_co = 3.2848e-10  # (m)
 
 a_rep_oo   = 4.0*eps_oo*sig_oo^12
-a_rep_d_oo = 4.0*eps_oo*sig_oo^6 / 0.78
+a_rep_d_oo = 4.0*eps_oo*sig_oo^6 #/ 0.78
 
 a_rep_cc   = 4.0*eps_cc*sig_cc^12
-a_rep_d_cc = 4.0*eps_cc*sig_cc^6 / 0.79
+a_rep_d_cc = 4.0*eps_cc*sig_cc^6 #/ 0.79
 
 a_rep_co = sqrt( (a_rep_oo) * (a_rep_cc) )
 a_rep_d_co = sqrt( (a_rep_d_oo) * (a_rep_d_cc) )

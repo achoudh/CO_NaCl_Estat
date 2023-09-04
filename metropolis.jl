@@ -134,7 +134,6 @@ fig = show_figure(initial_state, com0_ml, com0_ol, "Initial")
 
 
 # write_to_file("buried_ov_fixed_dof.txt", res)
-arnab
 
 Threads.@threads for i in 1:4
 

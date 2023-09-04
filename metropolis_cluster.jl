@@ -31,14 +31,17 @@ include("ir_spectra.jl")
 # construct a monolayer
 
 # orientation of molecules in a monolayer's unit cell
-θ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees #[30.0,30.0,30.0,30.0]
-ϕ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees #[20.0,60.0,20.0,60.0]
+θ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees +[24.0,24.0,24.0,24.0] .* degrees
+ϕ_uc = zeros(Float64, 4) + [0.0,0.0,0.0,0.0]*degrees +[360.0,360.0,180.0,180.0] .* degrees
 # monolayer-surface distance (reduced units)
 z_ml = 3.35e-10/a0_surf
 # get a monolayer molecules' reduced positions and orientation
 com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
 # deviation vectors of molecular positions (r = com0 + δr)
 δr_ml = zeros(Float64,nmols_ml,3)
+δr_ml[1 + 0*nmols_ml:1*nmols_ml] = repeat([0.16, 0.16, -0.16, -0.16], outer =nx*ny)   # δr
+δr_ml[1 + 1*nmols_ml:2*nmols_ml] = repeat([0.0, 0.0, 0.0, 0.0], outer =nx*ny)
+δr_ml[1 + 2*nmols_ml:3*nmols_ml] = fill(-0.03/3.99, nmols_ml)
 
 # construct an overlayer
 
@@ -103,7 +106,9 @@ flgs[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = fill(0, nmols_ol2)
 flgs[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = fill(0, nmols_ol2)
 flgs[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = fill(0, 2*nmols_ol2)
 
+println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol)  )
 
+arnab
 #######################################################
 # Run simulation with randomly modified initial_state #
 #######################################################
