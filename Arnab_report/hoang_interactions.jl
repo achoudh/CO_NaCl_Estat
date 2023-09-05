@@ -2,10 +2,22 @@
 # constants #
 #############
 
-# Two center multipole moments obtained from Meredith
-mom_C::Vector{Float64} = [0.18314*e, 0.33842*di_au, -0.90316*qu_au, -0.25179*oc_au, 0.13324*hx_au]
-mom_O::Vector{Float64} = [-0.02320*e, -0.29304*di_au, 0.09203*qu_au, -0.09083*oc_au, -0.02669*hx_au]
 
+# Two center multipole moments obtained from Meredith
+mom_C::Vector{Float64} = [ 0.04135*e,  0.42424*di_au, -0.42210*qu_au]
+mom_O::Vector{Float64} = [-0.04135*e, -0.26316*di_au,  0.38783*qu_au]
+
+v1 =  0.4278e-10
+v2 =  0.6649e-10
+w1 = -0.8354e-10
+w2 = -0.7134e-10
+
+aij::Vector{Float64} = [613201.5, 1531479.5, 1531479.5, 5195586.0] * 1.60218e-22
+bij::Vector{Float64} = [3.10, 3.49, 3.49, 4.0] * 1e10
+cij::Vector{Float64} = [33096.7, 17235.6, 17235.6, 9695.3] * 1e-60 * 1.60218e-22
+
+# k_fact::Vector{Float64} = [factorial(k) for k in 0:6]
+bij_kfact::Vector{Vector{Float64}} = [(bij .^ k)/factorial(k) for k in 0:6]
 
 #############
 # functions #
@@ -75,15 +87,62 @@ function ion_ion_interaction(R12::Vector{Float64}, e1z::Vector{Float64}, e2z::Ve
         T22=iR5*0.75*(35.0*r1z2*r2z2 - 5.0*r1z2 - 5.0*r2z2 + 20.0*r1z*r2z*czz + 2.0*czz2 + 1.0)
         VQuQu = Qu1*Qu2*T22*eps4pi
 
-  
-    # Disp-Rep
     
-    V_ion_ion::Float64 = Vqq + Vqmu + Vmumu + VmuQu + VmuO + VQuQu + VQuO + VOO
+    V_ion_ion::Float64 = Vqq + Vqmu + Vmumu + VmuQu + VQuQu
 
-    return V_ion_ion * joule2wn #Vqq, Vqmu, Vmumu, VmuQu, VmuO, VQuQu, VQuO, VOO,
+    return V_ion_ion * joule2wn
 end
 
-function co_co_interactions(R12::Vector{Float64}, phi1::Float64, theta1::Float64, phi2::Float64, theta2::Float64)
+function ion_ion_disp(R12::Vector{Float64}, e1z, e2z)::Float64
+    o1p::Vector{Float64} = ( v2 .* e1z) 
+    o2p::Vector{Float64} = ( v2 .* e2z) 
+    c1p::Vector{Float64} = (-w2 .* e1z) 
+    c2p::Vector{Float64} = (-w2 .* e2z) 
+    
+    # Distance between the atoms from two molecules
+    o1o2::Float64 = norm(R12 .+ (o1p.-o2p))
+    o1c2::Float64 = norm(R12 .+ (o1p.-c2p))
+    c1c2::Float64 = norm(R12 .+ (c1p.-c2p))
+    c1o2::Float64 = norm(R12 .+ (c1p.-o2p))
+
+    V_disp::Float64 = 0.0
+
+    for (i::Int64, r::Float64) in enumerate([c1c2, c1o2, o1c2, o1o2])
+       fij::Float64 = 1.0
+       for (k::Int64, b::Vector{Float64}) in enumerate(bij_kfact)
+        fij -= b[i] * r^k * exp( - b[i]*r)
+       end
+       V_disp -= fij * cij[i] / r^6
+    end
+
+    return V_disp * joule2wn
+end
+
+function ion_ion_rep(R12::Vector{Float64}, e1z, e2z)::Float64
+    o1p::Vector{Float64} = ( v1 .* e1z) 
+    o2p::Vector{Float64} = ( v1 .* e2z) 
+    c1p::Vector{Float64} = (-w1 .* e1z) 
+    c2p::Vector{Float64} = (-w1 .* e2z) 
+    
+    # Distance between the atoms from two molecules
+    o1o2::Float64 = norm(R12 .+ (o1p.-o2p))
+    o1c2::Float64 = norm(R12 .+ (o1p.-c2p))
+    c1c2::Float64 = norm(R12 .+ (c1p.-c2p))
+    c1o2::Float64 = norm(R12 .+ (c1p.-o2p))
+
+    V_rep::Float64 = 0.0
+
+    for (i::Int64, r::Float64) in enumerate([c1c2, c1o2, o1c2, o1o2])
+       V_rep += aij[i] * exp( - bij[i]*r)
+    end
+
+    return V_rep
+end
+
+
+
+
+function co_co_interaction(R12::Vector{Float64}, phi1::Float64, theta1::Float64, phi2::Float64, theta2::Float64)
 
  # local axis unit vectors
     stheta1, sphi1, costheta1, cosphi1 = sin(theta1), sin(phi1), cos(theta1), cos(phi1)
@@ -106,7 +165,10 @@ function co_co_interactions(R12::Vector{Float64}, phi1::Float64, theta1::Float64
     V_CO_CO::Float64 = ion_ion_interaction(o1o2, e1z, e2z, mom_O, mom_O) +
                        ion_ion_interaction(o1c2, e1z, e2z, mom_O, mom_C) +
                        ion_ion_interaction(c1o2, e1z, e2z, mom_C, mom_O) +
-                       ion_ion_interaction(c1c2, e1z, e2z, mom_C, mom_C)
-    
+                       ion_ion_interaction(c1c2, e1z, e2z, mom_C, mom_C) +
+                       ion_ion_disp(R12, e1z, e2z) + 
+                       ion_ion_rep(R12, e1z, e2z)
+
+
     return V_CO_CO
 end
