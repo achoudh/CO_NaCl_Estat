@@ -13,8 +13,8 @@ include("lattice_construction.jl")
 include("visualization_makie.jl")
 
 ## Turn on the interaction needed ##
-# include("energy_cal_hoang.jl") 
-include("energy_cal_new.jl")
+include("energy_cal_hoang.jl") 
+# include("energy_cal_new.jl")
 
 include("simulated_annealing.jl")
 include("ir_spectra.jl")
@@ -64,7 +64,7 @@ initial_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
 initial_state[1 + 0*nmols_ml:1*nmols_ml] = theta_ml     # θ
 initial_state[1 + 1*nmols_ml:2*nmols_ml] = phi_ml       # ϕ 
 initial_state[1 + 2*nmols_ml:5*nmols_ml] = vec(δr_ml)   # δr
-initial_state[ndofs_ml]                  = 0.0          # overlayer height deviation from c.-of-m.
+initial_state[ndofs_ml]                  = 10.0          # overlayer height deviation from c.-of-m.
 # overlayer
 initial_state[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = theta_ol[1:nmols_ol2]    # θ
 initial_state[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
