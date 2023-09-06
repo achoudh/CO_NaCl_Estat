@@ -99,7 +99,10 @@ initial_state[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = vec(δr_ol)
 # 4             a z-coordinate
 flgs[1 + 0*nmols_ml:1*nmols_ml]   = fill(1, nmols_ml)
 flgs[1 + 1*nmols_ml:2*nmols_ml]   = fill(2, nmols_ml)
-flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(3, 2*nmols_ml)
+flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(0, 2*nmols_ml)
+flgs[1 + 2*nmols_ml:4:3*nmols_ml]   = fill(3, Int(nx*ny))
+flgs[1 + 3*nmols_ml:4:4*nmols_ml]   = fill(3, Int(nx*ny))
+
 flgs[1 + 4*nmols_ml:5*nmols_ml]   = fill(4, nmols_ml) 
 flgs[ndofs_ml]                    = 0 # adding the overlayer shift
 flgs[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = fill(0, nmols_ol2)
