@@ -13,7 +13,8 @@ include("lattice_construction.jl")
 include("visualization_makie.jl")
 
 ## Turn on the interaction needed ##
-include("energy_cal_new.jl") 
+include("energy_cal_hoang.jl") 
+# include("energy_cal_new.jl")
 
 include("simulated_annealing.jl")
 include("ir_spectra.jl")
@@ -63,7 +64,7 @@ initial_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
 initial_state[1 + 0*nmols_ml:1*nmols_ml] = theta_ml     # θ
 initial_state[1 + 1*nmols_ml:2*nmols_ml] = phi_ml       # ϕ 
 initial_state[1 + 2*nmols_ml:5*nmols_ml] = vec(δr_ml)   # δr
-initial_state[ndofs_ml]                  = 0.0          # overlayer height deviation from c.-of-m.
+initial_state[ndofs_ml]                  = 10.0          # overlayer height deviation from c.-of-m.
 # overlayer
 initial_state[1 + ndofs_ml + 0*nmols_ol2 : ndofs_ml + 1*nmols_ol2] = theta_ol[1:nmols_ol2]    # θ
 initial_state[1 + ndofs_ml + 1*nmols_ol2 : ndofs_ml + 2*nmols_ol2] = phi_ol[1:nmols_ol2]    # ϕ 
@@ -104,6 +105,7 @@ println("Initial state:")
 #println(initial_state)
 println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol))
 
+arnab
 # Display Structure and IR Spectra
 fig = show_figure(initial_state, com0_ml, com0_ol, "Initial")
 # save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/initial.png", fig)
@@ -132,7 +134,7 @@ fig = show_figure(initial_state, com0_ml, com0_ol, "Initial")
 
 # modified_states = []
 
-
+arnab
 # write_to_file("buried_ov_fixed_dof.txt", res)
 
 Threads.@threads for i in 1:4
@@ -156,23 +158,9 @@ Threads.@threads for i in 1:4
 end
 
 
-fig, ax, = scatter(res[4])
-
-
-# println(res[1])
-println(res[2])
-println(res[4])
-
-println("The Final ML parameters are")
-show_params(res[1])
-
 # using Profile , ProfileView
 
 # @profile simulated_annealing(initial_state, 30, 0.5)
 
 
 # ProfileView.view()
-
-write_to_file("buried_ov_fixed_dof.txt", res)
-
-Plots.histogram(res[4])

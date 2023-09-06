@@ -64,8 +64,8 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
         ml_c  = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
         ml_bc = rvec + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
         
-        pot_mlsurf += mol_surf_attr_stone_tensor(ml_o, ml_c, ml_bc, unit_vec) +
-                      mol_surf_rep_stone(ml_o, ml_c, 4)
+        pot_mlsurf += mol_surf_attr_2DMA_tensor(ml_o, ml_c, unit_vec) +
+                      mol_surf_rep_2DMA(ml_o, ml_c, 4)
     end
 
     # Overlayer-Surface interaction
@@ -86,8 +86,8 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
         ol_c  = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
         ol_bc = rvec + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
         
-        pot_olsurf += mol_surf_attr_stone_tensor(ol_o, ol_c, ol_bc, unit_vec) +
-                      mol_surf_rep_stone(ol_o, ol_c, 4)
+        pot_olsurf += mol_surf_attr_2DMA_tensor(ol_o, ol_c, unit_vec) +
+                      mol_surf_rep_2DMA(ol_o, ol_c, 4)
     end
 
     # overlayer-monolayer interaction
@@ -107,7 +107,6 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
         rvec12 = a0_surf .* rvec12
         pot_mlol += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], ϕ_ol[j], θ_ol[j])
     end
-
     return pot_mlml + pot_olol + (pot_mlsurf + pot_olsurf)*joule2wn + pot_mlol
 end 
 
@@ -147,8 +146,8 @@ function energy_ml_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i)
     ml_c  = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
     ml_bc = rvec + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
     
-    pot_mlsurf += mol_surf_attr_stone_tensor(ml_o, ml_c, ml_bc, unit_vec) +
-                      mol_surf_rep_stone(ml_o, ml_c, 4)
+    pot_mlsurf += mol_surf_attr_2DMA_tensor(ml_o, ml_c, unit_vec) +
+                      mol_surf_rep_2DMA(ml_o, ml_c, 4)
 
     # overlayer-monolayer interaction
 
@@ -221,8 +220,8 @@ function energy_ol_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i)
     ol_c  = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
     ol_bc = rvec + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
     
-    pot_olsurf += mol_surf_attr_stone_tensor(ol_o, ol_c, ol_bc, unit_vec) +
-                  mol_surf_rep_stone(ol_o, ol_c, 4)
+    pot_olsurf += mol_surf_attr_2DMA_tensor(ol_o, ol_c, unit_vec) +
+                  mol_surf_rep_2DMA(ol_o, ol_c, 4)
 
     # overlayer-monolayer interaction
     pot_mlol = Float64(0.0)
@@ -266,8 +265,8 @@ function energy_ol_δz(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
         ol_c  = rvec + [-w*stheta*cosphi, -w*stheta*sphi, -w*costheta]
         ol_bc = rvec + [-bc*stheta*cosphi, -bc*stheta*sphi, -bc*costheta]
         
-        pot_olsurf += mol_surf_attr_stone_tensor(ol_o, ol_c, ol_bc, unit_vec) +
-                      mol_surf_rep_stone(ol_o, ol_c, 4)
+        pot_olsurf += mol_surf_attr_2DMA_tensor(ol_o, ol_c, unit_vec) +
+                      mol_surf_rep_2DMA(ol_o, ol_c, 4)
     end
 
     # overlayer-monolayer interaction

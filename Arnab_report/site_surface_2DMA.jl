@@ -7,25 +7,34 @@ using LinearAlgebra
 ######################################
 
 
+#############
+# constants #
+#############
+
 # Two center multipole moments obtained from Meredith
-mom_C::Vector{Float64} = [0.18314*e, 0.33842*di_au, -0.90316*qu_au, -0.25179*oc_au, 0.13324*hx_au]
-mom_O::Vector{Float64} = [-0.02320*e, -0.29304*di_au, 0.09203*qu_au, -0.09083*oc_au, -0.02669*hx_au]
+mom_C::Vector{Float64} = [ 0.04135*e,  0.42424*di_au, -0.42210*qu_au]
+mom_O::Vector{Float64} = [-0.04135*e, -0.26316*di_au,  0.38783*qu_au]
+
 
 # All constants below are reported as alpha0, alpha1, ro0, ro1, ro2
-c_na_rep::Vector{Float64} = [4.5036e10, 0.4343e10, 2.9090e-10, -0.0636e-10, 0.0488e-10]
-c_cl_rep::Vector{Float64} = [3.5542e10, 0.3156e10, 3.6047e-10, -0.0079e-10, 0.0948e-10]
-o_na_rep::Vector{Float64} = [5.1882e10, -0.1221e10, 2.7192e-10, -0.0074e-10, -0.0455e-10]
-o_cl_rep::Vector{Float64} = [3.8639e10, -0.0658e10, 3.2899e-10, 0.1018e-10, -0.0460e-10]
+c_na_rep::Vector{Float64} = [4.106e10, 2.456e-10, -0.795e-10, -0.239e-10]
+c_cl_rep::Vector{Float64} = [3.260e10, 2.989e-10, -0.953e-10, -0.267e-10]
+o_na_rep::Vector{Float64} = [5.085e10, 2.942e-10, -0.374e-10,  0.101e-10]
+o_cl_rep::Vector{Float64} = [3.880e10, 3.616e-10, -0.387e-10,  0.129e-10]
 rep_coeffs = [ [c_na_rep, o_na_rep], [c_cl_rep, o_cl_rep] ]
-K_stone::Float64 = 4.3597482e-21
+K_stone::Float64 = 27.25 * 1.60218e-22
 
 # Dispersion coefficients
 # [ [C-Na, O-Na], [C-Cl, O-Cl] ]
-disp_coef::Matrix{Float64} = [ [383.3 256.6]; [3935.9 2633.0] ]/6.02214076*1e-80 
+disp_coef::Matrix{Float64} = [ [3774 2889]; [38740 29655] ]*1e-60 * 1.60218e-22 ## meV to J
 
 
+#############
+# functions #
+#############
 
-function multipole_components(R::Float64, e1z::Array{Float64, 1}, mom::Vector{Float64})
+
+function multipole_components(e1z::Array{Float64, 1}, mom::Vector{Float64})
     # Calculate components of the multipole moments
     # mu, Qu, o -> are the scalar values of dipole moment, quadrapole moment and octapole moment respectively
     # All the terms in Cartesian Coordinate are calculated from (Buckingham, 1959)
@@ -33,14 +42,13 @@ function multipole_components(R::Float64, e1z::Array{Float64, 1}, mom::Vector{Fl
     charge::Float64 = 0.0
     dipole::Float64 = 0.0
     quadrupole::Float64 = 0.0
-    octapole::Float64 = 0.0
+
     Q0::Float64 = 0.0
     Q1::Array{Float64, 1} = zeros(3)
     Q2::Array{Float64, 2} = zeros(3, 3)
-    Q3::Array{Float64, 3} = zeros(3, 3, 3)
     
     # Call multipole_R_dependence subroutine to get multipole moments
-    charge, dipole, quadrupole, octapole, = mom
+    charge, dipole, quadrupole = mom
 
     # Calculating Cartesian components
     # charge
@@ -56,17 +64,7 @@ function multipole_components(R::Float64, e1z::Array{Float64, 1}, mom::Vector{Fl
         end
     end
 
-    # # Octapole moments
-    # for i in 1:3
-    #     for j in 1:3
-    #         for k in 1:3
-    #             Q3[i, j, k] = octapole * (5.0 * e1z[i] * e1z[j] * e1z[k] - e1z[i] * (j == k) -
-    #                                       e1z[j] * (k == i) - e1z[k] * (i == j)) * 0.5
-    #         end
-    #     end
-    # end
-
-    return Q0, Q1, Q2 #, Q3
+    return Q0, Q1, Q2
 end
 
 function pot_deriv_lm(com1::Vector{Float64}, dxyz::Vector{Float64}, l::Int64, m::Int64)::Float64
@@ -100,7 +98,6 @@ function site_surface_interaction(com::Vector{Float64}, unit_vec::Vector{Float64
     V_Q0_NaCl = 0.0
     V_Q1_NaCl = zeros(3)
     V_Q2_NaCl = zeros(3, 3)
-    V_Q3_NaCl = zeros(3, 3, 3)
     
     com1::Vector{Float64} = rot*com
     
@@ -110,11 +107,12 @@ function site_surface_interaction(com::Vector{Float64}, unit_vec::Vector{Float64
 
     #println(e1z)
     # Calculate multipole moments
-    Q0, Q1, Q2 = multipole_components(v+w, e1z, mom)
-    #println(Q0,Q1,Q2,Q3)
+    Q0, Q1, Q2 = multipole_components(e1z, mom)
+
     # Calculate electric field and its derivatives
     potfactor = eps_NaCl/a0_NaCl
-    phi, phia, phiab, phiabc = zeros(1), zeros(3), zeros(3,3), zeros(3,3,3)
+    phi, phia, phiab = zeros(1), zeros(3), zeros(3,3)
+
     for i = 1:nlm
         # Electric potential
         dxyz = zeros(3)
@@ -134,15 +132,6 @@ function site_surface_interaction(com::Vector{Float64}, unit_vec::Vector{Float64
         dxyz[k2] += 1
         phiab[k1, k2] -= potfactor*pot_deriv_lm(com1, dxyz, lodd[i], modd[i])
         end
-
-        # # Electric field hypergradient
-        # for k1 = 1:3, k2 = 1:3, k3 = 1:3
-        # dxyz = zeros(3)
-        # dxyz[k1] += 1
-        # dxyz[k2] += 1
-        # dxyz[k3] += 1
-        # phiabc[k1, k2, k3] -= potfactor*pot_deriv_lm(com1, dxyz, lodd[i], modd[i])
-        # end
     end
 
     V_Q0_NaCl = Q0*phi[1]
@@ -159,24 +148,19 @@ function site_surface_interaction(com::Vector{Float64}, unit_vec::Vector{Float64
         V_Q2_NaCl -= Q2[k1,k2]*phiab[k1,k2]/3.0
     end
 
-    # # octapole-second gradient interaction
-    # V_Q3_NaCl = 0.0
-    # for k1 in 1:3, k2 in 1:3, k3 in 1:3
-    #     V_Q3_NaCl -= Q3[k1,k2,k3]*phiabc[k1,k2,k3]/15.0
-    # end
+ 
 
     # Total CO-NaCl interaction energy is
-    V_CO_NaCl = V_Q0_NaCl + V_Q1_NaCl + V_Q2_NaCl # + V_Q3_NaCl
-    # println(V_CO_NaCl*joule2wn,V_Q1_NaCl*joule2wn,  V_Q2_NaCl*joule2wn, V_Q3_NaCl*joule2wn)
+    V_CO_NaCl = V_Q0_NaCl + V_Q1_NaCl + V_Q2_NaCl
 
-    return V_CO_NaCl, V_Q0_NaCl, V_Q1_NaCl, V_Q2_NaCl #, V_Q3_NaCl
+    return V_CO_NaCl, V_Q0_NaCl, V_Q1_NaCl, V_Q2_NaCl
     
 end
 
-function mol_surf_attr_hoang_tensor(com_o::Vector{Float64}, com_c::Vector{Float64}, com_bc::Vector{Float64}, unit_vec::Vector{Float64})::Float64
+function mol_surf_attr_2DMA_tensor(com_o::Vector{Float64}, com_c::Vector{Float64}, unit_vec::Vector{Float64})::Float64
     
-    return site_surface_interaction(com_o, unit_vec, mom_O)[1] + 
-    site_surface_interaction(com_c, unit_vec, mom_C)[1] 
+    return  site_surface_interaction(com_o, unit_vec, mom_O)[1] + 
+            site_surface_interaction(com_c, unit_vec, mom_C)[1] 
 end
 
 
@@ -185,13 +169,12 @@ end
 ####################################
 
 function alpha_ro_exp(params::Vector{Float64}, costheta::Float64, r::Float64)::Float64
-    alpha_0::Float64, alpha_1::Float64, ro_0::Float64, ro_1::Float64, ro_2::Float64 = params
-    alpha_leg::Float64 = alpha_0 + alpha_1*costheta
+    alpha_0::Float64, ro_0::Float64, ro_1::Float64, ro_2::Float64 = params
     ro_leg::Float64 = ro_0 + ro_1*costheta + 0.5*ro_2*(3*costheta^2 - 1)
-    return exp(-alpha_leg*(r-ro_leg))
+    return exp(-alpha_0*(r-ro_leg))
 end
 
-function mol_surf_rep_stone(op::Vector{Float64}, cp::Vector{Float64}, nei::Int64)
+function mol_surf_rep_2DMA(op::Vector{Float64}, cp::Vector{Float64}, nei::Int64)
 
     mco::Vector{Vector{Float64}} = [cp, op]
     rco::Vector{Float64} =  op - cp
