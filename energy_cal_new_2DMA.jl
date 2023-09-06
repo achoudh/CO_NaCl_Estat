@@ -108,7 +108,7 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
         rvec12 = a0_surf .* rvec12
         pot_mlol += co_co_interaction(rvec12, phi_ml[i], theta_ml[i], ϕ_ol[j], θ_ol[j])
     end
-    return pot_mlml , pot_olol , (pot_mlsurf , pot_olsurf).*joule2wn , pot_mlol
+    return pot_mlml + pot_olol + (pot_mlsurf + pot_olsurf).*joule2wn + pot_mlol
 end 
 
 # Calculate the ith monolayer molecule contribution into the energy
