@@ -102,6 +102,14 @@ flgs[1 + 1*nmols_ml:2*nmols_ml]   = fill(2, nmols_ml)
 flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(0, 2*nmols_ml)
 flgs[1 + 2*nmols_ml:4:3*nmols_ml]   = fill(3, Int(nx*ny))
 flgs[1 + 3*nmols_ml:4:4*nmols_ml]   = fill(3, Int(nx*ny))
+for i in 1 + 2*nmols_ml:3*nmols_ml
+    if (i-1)%4 < 2
+        flgs[i] = 30
+    else
+        flgs[i] = 31
+    end
+end
+
 
 flgs[1 + 4*nmols_ml:5*nmols_ml]   = fill(4, nmols_ml) 
 flgs[ndofs_ml]                    = 0 # adding the overlayer shift

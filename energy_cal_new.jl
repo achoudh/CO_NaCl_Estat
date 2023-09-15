@@ -9,7 +9,8 @@ include("co_co_Guo.jl")
 
 
 # Total energy (intra-monolayer + intra-overlayer + monolayer-Surface + overlayer-Surface + monolayer-overlayer )
-function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol) 
+function energy(x::Vector{Float64}, lattice_ml::Matrix{Float64}, lattice_ol::Matrix{Float64},
+             ϕ_ol::Vector{Float64}, θ_ol::Vector{Float64}) 
 
     theta_ml = x[1+0*nmols_ml:1*nmols_ml]
     phi_ml =   x[1+1*nmols_ml:2*nmols_ml]
@@ -112,7 +113,8 @@ function energy(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol)
 end 
 
 # Calculate the ith monolayer molecule contribution into the energy
-function energy_ml_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i) 
+function energy_ml_single(x::Vector{Float64}, lattice_ml::Matrix{Float64}, lattice_ol::Matrix{Float64},
+         ϕ_ol::Vector{Float64}, θ_ol::Vector{Float64}, i::Int64) 
 
     theta_ml = x[1+0*nmols_ml:1*nmols_ml]
     phi_ml =   x[1+1*nmols_ml:2*nmols_ml]
@@ -173,7 +175,8 @@ return pot_mlml + pot_mlol + pot_mlsurf*joule2wn
 end 
 
 # Calculate the ith overlayer molecule contribution into the energy
-function energy_ol_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i) 
+function energy_ol_single(x::Vector{Float64}, lattice_ml::Matrix{Float64}, lattice_ol::Matrix{Float64},
+        ϕ_ol::Vector{Float64}, θ_ol::Vector{Float64}, i::Int64) 
 
     theta_ml = x[1+0*nmols_ml:1*nmols_ml]
     phi_ml =   x[1+1*nmols_ml:2*nmols_ml]
@@ -238,7 +241,8 @@ function energy_ol_single(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol, i)
 end 
 
 # Calculate the energy (overlayer-monolayer + Overlayer-Surface)
-function energy_ol_δz(x, lattice_ml, lattice_ol, ϕ_ol, θ_ol) 
+function energy_ol_δz(x::Vector{Float64}, lattice_ml::Matrix{Float64}, lattice_ol::Matrix{Float64},
+                ϕ_ol::Vector{Float64}, θ_ol::Vector{Float64}) 
 
     theta_ml = x[1+0*nmols_ml:1*nmols_ml]
     phi_ml =   x[1+1*nmols_ml:2*nmols_ml]

@@ -1,7 +1,7 @@
 using Random
 using LinearAlgebra
 using Printf
-using GLMakie
+using CairoMakie
 
 # GLMakie.activate!()
 #########################
@@ -14,8 +14,8 @@ include("visualization_makie.jl")
 
 ## Turn on the interaction needed ##
 # include("energy_cal_hoang.jl") 
-# include("energy_cal_new.jl")
-include("energy_cal_new_2DMA.jl")
+include("energy_cal_new.jl")
+# include("energy_cal_new_2DMA.jl")
 
 include("simulated_annealing.jl")
 include("ir_spectra.jl")
@@ -106,11 +106,10 @@ println("Initial state:")
 #println(initial_state)
 println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol))
 
-arnab
 # Display Structure and IR Spectra
 fig = show_figure(initial_state, com0_ml, com0_ol, "Initial")
 # save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/initial.png", fig)
-# display(fig)
+display(fig)
 
 
 #######################################################
@@ -120,18 +119,25 @@ fig = show_figure(initial_state, com0_ml, com0_ol, "Initial")
 
 # Set step sizes
 
-@time res = simulated_annealing(initial_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
-                                δq, flgs, 
-                                0.4, 1000000.0, 100, 1, 2)
-                                # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
-                                # δq::Vector{Float64}, flgs::Vector{Int32}, 
-                                # cooling_rate::Float64, 
-                                # max_temperature::Float64, n_iterations::Int64 , 
-                                # nstep_thermalization::Int64, n_annealing_cycles::Int64)
+modified_state = random_coords(initial_state,flgs,[π, 2*π, 0.5, 0.2])
+    # push!(modified_state, modified_states)
+    # fig = show_figure(modified_state, com0_ml, com0_ol, "Ininal$i")
+    # save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/initial$i.png", show_figure(modified_state, com0_ml, com0_ol, "Ininal$i"))
 
-# fig2 = show_figure(res[1], com0_ml, com0_ol, "Final")
+@time res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
+                        δq, flgs, 
+                        0.1, 10000.0, 100, 1, 2)
+
+                        # (initial_state::Vector{Float64}, lattice_ml, lattice_ol, phi_ol, theta_ol, trig_uc,
+                        # δq::Vector{Float64}, flgs::Vector{Int32}, 
+                        # cooling_rate::Float64, 
+                        # max_temperature::Float64, n_iterations::Int64 , 
+                        # nstep_thermalization::Int64, n_annealing_cycles::Int64)
+
+fig2 = show_figure(res[2][end][:], com0_ml, com0_ol, "Final")
 # save("C:/Users/achoudh/ownCloud/my work/CO_NaCl-estat/Estat_results/final.png", fig2)
 # display(GLMakie.Screen(), fig2)
+display(fig2)
 
 # modified_states = []
 

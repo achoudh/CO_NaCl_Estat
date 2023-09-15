@@ -23,7 +23,7 @@ function new_coords(x::Vector{Float64}, δq::Vector{Float64}, flgs::Vector{Int32
     return x_new
 end
 
-function random_coords(x::Vector{Float64}, flgs::Vector{Int32}, δq)
+function random_coords(x::Vector{Float64}, flgs::Vector{Int32}, δq::Vector{Float64})
 
     modified_state = zeros(Float64, ndofs_ml+4*nmols_ol2)
 
@@ -52,7 +52,7 @@ end
 acceptance_probability(delta::Float64, T::Float64)::Float64 = exp(-delta/T)
 
 function annealing_schedule(T0::Float64, α::Float64, k::Int64)::Float64
-    return T0 * k^t
+    return T0 * α^k
 end
 
 function annealing_schedule2(T0::Float64, α::Float64, k::Int64)::Float64
