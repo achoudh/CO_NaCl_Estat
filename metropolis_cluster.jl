@@ -47,7 +47,7 @@ com0_ml, phi_ml, theta_ml = monolayer(θ_uc, ϕ_uc, z_ml)
 
 # orientation of molecules in an overlayer's unit cell
 θ_uc = [ 3, 1, 3, 1, 1, 3, 1, 3]*pi/4.0  # The old structure [ 3, 1, 3, 1, 3, 1, 3, 1]*pi/4.0 is not correct
-ϕ_uc = [-1, 0,-1, 0, 1, 2, 1, 2]*pi/2.0 
+ϕ_uc = [-1, 0,-1, 0, 2, 1, 2, 1]*pi/2.0 # The old structure [-1, 0,-1, 0, 1, 2, 1, 2]*pi/4.0
 trig_uc = (sin.(θ_uc), cos.(θ_uc), sin.(ϕ_uc), cos.(ϕ_uc))
 # overlayer-surface distance (reduced units)
 z_ol = z_ml + 0.5*a0_CO/a0_surf #+ 10.00*a0_CO/a0_surf
@@ -102,13 +102,13 @@ flgs[1 + 1*nmols_ml:2*nmols_ml]   = fill(2, nmols_ml)
 flgs[1 + 2*nmols_ml:4*nmols_ml]   = fill(0, 2*nmols_ml)
 flgs[1 + 2*nmols_ml:4:3*nmols_ml]   = fill(3, Int(nx*ny))
 flgs[1 + 3*nmols_ml:4:4*nmols_ml]   = fill(3, Int(nx*ny))
-for i in 1 + 2*nmols_ml:3*nmols_ml
-    if (i-1)%4 < 2
-        flgs[i] = 30
-    else
-        flgs[i] = 31
-    end
-end
+# for i in 1 + 2*nmols_ml:3*nmols_ml
+#     if (i-1)%4 < 2
+#         flgs[i] = 30
+#     else
+#         flgs[i] = 31
+#     end
+# end
 
 
 flgs[1 + 4*nmols_ml:5*nmols_ml]   = fill(4, nmols_ml) 
@@ -119,37 +119,37 @@ flgs[1 + ndofs_ml + 2*nmols_ol2 : ndofs_ml + 4*nmols_ol2] = fill(0, 2*nmols_ol2)
 
 println(energy(initial_state,com0_ml,com0_ol, phi_ol, theta_ol)  )
 
-arnab
 #######################################################
 # Run simulation with randomly modified initial_state #
 #######################################################
-task_id = Base.parse(Int, ENV["SLURM_ARRAY_TASK_ID"])
+#task_id = Base.parse(Int, ENV["SLURM_ARRAY_TASK_ID"])
 
-seed_num = 1234 + task_id
-Random.seed!(seed_num);
+#seed_num = 1234 + task_id
+#Random.seed!(seed_num);
 
 # Set step sizes
 
-if task_id == 1
+#if task_id == 1
 println("initial tilt angle is 0 to pi")
 println("The simulation is only run so that final structure is only C-down")
 println("overlayer is far and fixed")
 println("annealing parameters")
 println("0.1, 10000.0, 600, 10, 10")
 println("Introducing new colling mechanism and turning on the theramlization")
-end
+#end
 
 
 modified_state = random_coords(initial_state,flgs,[pi/2, 2*pi, 0.5, 0.2])
 
-println(task_id, energy(modified_state,com0_ml,com0_ol, phi_ol, theta_ol))    
+# println(task_id, energy(modified_state,com0_ml,com0_ol, phi_ol, theta_ol))    
 
 res = simulated_annealing(modified_state, com0_ml, com0_ol, phi_ol, theta_ol, trig_uc, 
                             δq, flgs, 
-                            0.4, 1000000.0, 800, 1, 10) ## The thermalization loop does not matter
+                            0.4, 1000.0, 1, 1, 1) ## The thermalization loop does not matter
 
 
-write_to_file("./Output/22-08-2023/2/buried_ov_fixed_dof_$task_id.txt", res)
+# write_to_file("./Output/22-08-2023/2/buried_ov_fixed_dof_$task_id.txt", res)
 
 
 
+res[2][end]
